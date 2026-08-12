@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+/* ============================================================
+   デザイントークン（Figma: Dog Garden Chouchou / base ページ）
+   ============================================================ */
+@theme {
+  /* フォント */
+  --font-jp: var(--font-mplus-1p);
+  --font-en: var(--font-poller-one);
+  --font-sans: var(--font-mplus-1p);
+
+  /* カラー（Figma変数と1:1） */
+  --color-pink: #f0d0d8; /* PINK */
+  --color-blue: #eaf1f2; /* BLUE */
+  --color-beige: #f6f3e9; /* BEIGE */
+  --color-green: #c7e7c8; /* GREEN */
+  --color-green-dark: #aac5ab; /* DARK GREEN */
+  --color-yellow: #ecefbb; /* YELLOW */
+  --color-yellow-light: #f5f7ca; /* Q&Aカード背景（Figma生値） */
+  --color-ink: #696969; /* BLACK */
+  --color-ink-light: #7c7c7c; /* BLACK_3 */
+  --color-field: rgba(217, 217, 217, 0.5); /* 入力欄背景 */
+  --color-placeholder: #d9d9d9; /* 画像プレースホルダー */
+
+  /* 影 */
+  --shadow-pop: 5px 5px 0 rgba(0, 0, 0, 0.15);
+  --shadow-btn: 2px 2px 0 rgba(0, 0, 0, 0.2);
+  --drop-shadow-pop: 5px 5px 0 rgba(0, 0, 0, 0.15);
+}
+
+:root {
+  --background: #f6f3e9;
+  --foreground: #7c7c7c;
+  /* PCデザイン幅 */
+  --design-width: 1024px;
+  --content-width: 700px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-jp);
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   共通ユーティリティ
+   ============================================================ */
+
+/* セクションの内側コンテナ（PC 1024px設計 → SPは左右20px） */
+.container-page {
+  width: 100%;
+  max-width: var(--design-width);
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+
+@media (min-width: 768px) {
+  .container-page {
+    padding-inline: 40px;
+  }
+}
+
+/* 本文ブロック（Figmaの560px / 700px 相当） */
+.measure-560 {
+  width: 100%;
+  max-width: 560px;
+}
+
+.measure-700 {
+  width: 100%;
+  max-width: 700px;
+}
+
+/* 花びら型マスク（TOPヒーローの写真） */
+.mask-flower {
+  -webkit-mask-image: url("/assets/flower-mask.svg");
+  mask-image: url("/assets/flower-mask.svg");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* TOP PUPPY INFO のポラロイド風カード写真マスク */
+.mask-polaroid {
+  -webkit-mask-image: url("/assets/top-puppy-card-mask.svg");
+  mask-image: url("/assets/top-puppy-card-mask.svg");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* 肉球パターン背景（Instagramセクション） */
+.paw-pattern {
+  background-image: url("/assets/top-insta-bg-pattern.svg");
+  background-repeat: repeat;
+  background-size: 1024px 432px;
+}
