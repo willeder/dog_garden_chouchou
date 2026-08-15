@@ -1,13 +1,16 @@
 import { notFound } from "next/navigation";
 import SectionHeading from "@/app/_common/ui/SectionHeading";
 import FadeInSection from "@/app/_common/FadeInSection";
+import PhotoGallery from "@/app/_common/PhotoGallery";
+import Button from "@/app/_common/ui/Button";
 import BackLink from "@/app/_layout/back";
 import { ContactSection } from "@/app/_components/contact";
 import { getPuppies, getPuppy } from "@/app/_api/puppies/get";
 import { generateMetadata as buildMetadata } from "@/app/_config/metadata";
 import { formatBirthday } from "@/app/_lib/date";
-import PuppyGallery from "./_components/PuppyGallery";
 import PuppySpec from "./_components/PuppySpec";
+import BreederMessage from "./_components/BreederMessage";
+import Parents from "./_components/Parents";
 
 // ISR: 1時間ごとに再生成（app/_config/isr.ts の defaultRevalidateTime と同値）
 export const revalidate = 3600;
@@ -38,20 +41,50 @@ export default async function PuppyDetailPage({ params }: PageProps) {
 
   return (
     <>
+      {/* 写真 */}
       <section className="bg-beige pb-6 pt-8">
         <div className="mx-auto flex max-w-[1024px] flex-col items-center gap-4 px-5 md:px-[160px]">
           <FadeInSection>
             <SectionHeading en="PUPPY INFO" ja="仔犬紹介" />
           </FadeInSection>
-          <PuppyGallery images={puppy.images} alt={`${puppy.breed}の仔犬`} />
+          <PhotoGallery
+            images={puppy.images}
+            alt={`${puppy.breed}の仔犬`}
+            status={puppy.status}
+          />
         </div>
       </section>
 
-      <section className="bg-beige pb-20">
+      {/* 基本情報 */}
+      <section className="bg-beige pb-8">
         <FadeInSection className="mx-auto flex max-w-[1024px] justify-center px-5 md:px-[175px]">
-          <dl className="w-full max-w-[700px]">
-            <PuppySpec puppy={puppy} />
-          </dl>
+          <PuppySpec puppy={puppy} />
+        </FadeInSection>
+      </section>
+
+      {/* 見学・お問い合わせ導線（価格の近くに置く） */}
+      <section className="bg-beige pb-12">
+        <FadeInSection className="mx-auto flex max-w-[1024px] flex-col items-center gap-3 px-5 md:px-[175px]">
+          <p className="text-center font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
+            この子の見学・ご相談は公式LINEにて承っております。
+          </p>
+          <Button href="/contact" variant="green" font="jp">
+            LINEで見学・お問い合わせ
+          </Button>
+        </FadeInSection>
+      </section>
+
+      {/* ブリーダーからのメッセージ */}
+      <section className="bg-beige pb-8">
+        <FadeInSection className="mx-auto flex max-w-[1024px] justify-center px-5 md:px-[162px]">
+          <BreederMessage message={puppy.message} />
+        </FadeInSection>
+      </section>
+
+      {/* 両親の情報 */}
+      <section className="bg-beige pb-20">
+        <FadeInSection className="mx-auto flex max-w-[1024px] justify-center px-5 md:px-[162px]">
+          <Parents father={puppy.father} mother={puppy.mother} />
         </FadeInSection>
       </section>
 

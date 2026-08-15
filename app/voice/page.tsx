@@ -44,7 +44,7 @@ export default async function VoicePage() {
                       alt=""
                       width={142}
                       height={142}
-                      className="h-[142px] w-[142px] shrink-0 rounded-full object-cover object-bottom"
+                      className="h-[142px] w-[142px] shrink-0 rounded-full object-cover object-top"
                     />
                   ) : (
                     <div className="h-[142px] w-[142px] shrink-0 rounded-full bg-placeholder" />

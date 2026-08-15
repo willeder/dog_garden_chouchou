@@ -2,22 +2,36 @@ import Image from "next/image";
 import Button from "@/app/_common/ui/Button";
 import SectionHeading from "@/app/_common/ui/SectionHeading";
 import FadeInSection from "@/app/_common/FadeInSection";
-import HeroCarousel from "./HeroCarousel";
+import HeroSlideshow from "./HeroSlideshow";
 
 /**
- * Figma: TOP_PC / ABOUTUS（1024×795）
- * 空・丘・草花のイラスト背景の上に、ヒーローカルーセルとABOUT USを重ねる
+ * キービジュアル ＋ ABOUT US。
+ * ヒーローは dog_breeder_ran と同じ全幅スライドショー。
+ * その下のABOUT USは Figma（TOP_PC / ABOUTUS）の緑の丘の上に置き、ヒーローの丘と地続きにする。
  */
 export const HeroSection = () => (
-  <section
-    className="relative bg-blue bg-[length:100%_100%] bg-no-repeat"
-    style={{ backgroundImage: "url('/assets/top-about-bg.svg')" }}
-    aria-label="ドッグガーデンシュシュについて"
-  >
-    <div className="mx-auto flex max-w-[1024px] flex-col items-center gap-5 px-5 pb-16 pt-8 md:px-[45px] md:pb-[106px] md:pt-12">
-      <HeroCarousel />
+  <>
+    <HeroSlideshow />
 
-      <FadeInSection className="flex flex-col items-center">
+    <section className="relative bg-green pb-[80px] pt-2" aria-label="ドッグガーデンシュシュについて">
+      {/* 草の装飾 */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-[6%] bottom-[47px] top-0 bg-no-repeat opacity-90"
+        style={{ backgroundImage: "url('/assets/grass.svg')", backgroundSize: "100% 100%" }}
+      />
+
+      {/* 花の装飾（PCのみ） */}
+      <div className="pointer-events-none absolute inset-0 hidden lg:block" aria-hidden>
+        <Image src="/assets/flower-purple.svg" alt="" width={41} height={59} className="absolute left-[9%] top-[14%]" />
+        <Image src="/assets/flower-pink.svg" alt="" width={35} height={51} className="absolute left-[16%] top-[26%]" />
+        <Image src="/assets/flower-pink.svg" alt="" width={35} height={51} className="absolute left-[81%] top-[18%] -scale-x-100" />
+        <Image src="/assets/flower-purple.svg" alt="" width={41} height={59} className="absolute left-[88%] top-[30%] -scale-x-100" />
+        <Image src="/assets/flower-purple.svg" alt="" width={41} height={59} className="absolute left-[11%] top-[66%]" />
+        <Image src="/assets/flower-pink.svg" alt="" width={35} height={51} className="absolute left-[85%] top-[70%] -scale-x-100" />
+      </div>
+
+      <FadeInSection className="relative mx-auto flex max-w-[1024px] flex-col items-center px-5 md:px-[45px]">
         {/* 犬のイラストが骨型プレートに重なる（Figma: mb -52px） */}
         <div className="relative -mb-[36px] w-[280px] md:-mb-[52px] md:w-[393px]">
           <Image
@@ -41,8 +55,15 @@ export const HeroSection = () => (
           </Button>
         </div>
       </FadeInSection>
-    </div>
-  </section>
+
+      {/* 下端の波形でBEIGEのセクションへつなぐ */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[47px] bg-no-repeat"
+        style={{ backgroundImage: "url('/assets/hill-wave-bottom.svg')", backgroundSize: "100% 100%" }}
+      />
+    </section>
+  </>
 );
 
 export default HeroSection;

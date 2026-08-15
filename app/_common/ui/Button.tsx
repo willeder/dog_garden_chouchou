@@ -45,6 +45,14 @@ export const Button = ({
   ].join(" ");
 
   if (href && !disabled) {
+    // 外部リンクは新しいタブで開く（dog_breeder_ran の Button と同じ挙動）
+    if (href.startsWith("http")) {
+      return (
+        <a href={href} target="_blank" rel="noopener noreferrer" className={base}>
+          {children}
+        </a>
+      );
+    }
     return (
       <Link href={href} className={base}>
         {children}

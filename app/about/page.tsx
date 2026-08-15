@@ -5,6 +5,9 @@ import BackLink from "@/app/_layout/back";
 import { generateMetadata as buildMetadata } from "@/app/_config/metadata";
 import { kennelInfo } from "@/app/_data/kennelInfo";
 import PointCard from "./_components/PointCard";
+import Company from "./_components/Company";
+import Registration from "./_components/Registration";
+import StaffDay from "./_components/StaffDay";
 import { kennelPoints } from "./_components/data";
 
 export const metadata = buildMetadata(
@@ -25,7 +28,7 @@ export default function AboutPage() {
             width={700}
             height={315}
             priority
-            className="measure-700 h-auto object-cover object-bottom"
+            className="measure-700 h-auto object-cover object-top"
           />
           <p className="measure-560 font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
             わんちゃんたちが毎日楽しく過ごせる場所、それが「ドッグガーデンシュシュ」です。
@@ -97,6 +100,21 @@ export default function AboutPage() {
             </div>
           </div>
         </FadeInSection>
+      </section>
+
+      {/* スタッフの1日・犬舎概要・登録情報（dog_breeder_ran と同じ構成） */}
+      <section className="bg-blue pb-12">
+        <div className="mx-auto flex max-w-[1024px] flex-col items-center gap-8 px-5 md:px-[162px]">
+          <FadeInSection className="flex w-full justify-center">
+            <StaffDay />
+          </FadeInSection>
+          <FadeInSection className="flex w-full justify-center">
+            <Company />
+          </FadeInSection>
+          <FadeInSection className="flex w-full justify-center">
+            <Registration />
+          </FadeInSection>
+        </div>
       </section>
 
       <BackLink />

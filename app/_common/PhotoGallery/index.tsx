@@ -3,14 +3,21 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { ImageWithSize } from "@/app/_model/image";
+import type { Status } from "@/app/_model/puppy";
+import StatusBadge from "@/app/_common/ui/StatusBadge";
 
-type PuppyGalleryProps = {
+type PhotoGalleryProps = {
   images: ImageWithSize[];
   alt: string;
+  /** 指定するとメイン画像の左上にステータスを重ねる */
+  status?: Status;
 };
 
-/** Figma: PUPPYINFO_detail_2（メイン704×350 ＋ サムネイル83×99×5 ＋ 左右矢印） */
-export const PuppyGallery = ({ images, alt }: PuppyGalleryProps) => {
+/**
+ * Figma: PUPPYINFO_detail_2（メイン704×350 ＋ サムネイル83×99 ＋ 左右矢印）
+ * 仔犬詳細・里親募集詳細で共用する
+ */
+export const PhotoGallery = ({ images, alt, status }: PhotoGalleryProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (images.length === 0) {
@@ -22,15 +29,17 @@ export const PuppyGallery = ({ images, alt }: PuppyGalleryProps) => {
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <div className="relative aspect-[704/350] w-full max-w-[704px]">
+      <div className="relative aspect-[704/350] w-full max-w-[704px] overflow-hidden">
         <Image
           src={images[activeIndex].url}
           alt={alt}
           fill
           sizes="(min-width: 1024px) 704px, 100vw"
           priority
-          className="object-cover object-top"
+          // 704×350の横長クロップは縦長写真の上端だけを切り出してしまうため中央基準にする
+          className="object-cover object-center"
         />
+        {status && <StatusBadge status={status} />}
       </div>
 
       {images.length > 1 && (
@@ -96,4 +105,4 @@ export const PuppyGallery = ({ images, alt }: PuppyGalleryProps) => {
   );
 };
 
-export default PuppyGallery;
+export default PhotoGallery;

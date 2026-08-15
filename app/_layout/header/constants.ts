@@ -13,8 +13,12 @@ export const navItems: NavItem[] = [
   { name: "Q＆A", href: "/faq" },
 ];
 
-/** Figma: フッターのナビゲーション（先頭にHOMEが入る） */
+/**
+ * フッターのナビゲーション。
+ * Figmaのヘッダーは6項目固定のため、生体保証はフッターからの導線とする。
+ */
 export const footerNavItems: NavItem[] = [
   { name: "HOME", href: "/" },
   ...navItems,
+  { name: "生体保証", href: "/warranty" },
 ];

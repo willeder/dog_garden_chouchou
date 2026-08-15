@@ -47,7 +47,7 @@ export const VoiceCarousel = ({ voices }: VoiceCarouselProps) => {
                   alt=""
                   fill
                   sizes="240px"
-                  className="object-cover object-bottom"
+                  className="object-cover object-top"
                 />
               ) : (
                 <div className="h-full w-full bg-placeholder" />

@@ -11,6 +11,15 @@ export type KennelInfo = {
   /** 郵便番号（ハイフンなし） */
   postalCode: string;
   address: string;
+  /** 設立年度（例: 2023年） */
+  establishedYear: string;
+  /** 事業内容 */
+  businessContent: string;
+  /** アクセス情報。未設定の項目は表示されない */
+  access: {
+    station?: string;
+    parking?: string;
+  };
   sns: {
     instagram?: string;
     tiktok?: string;
@@ -23,13 +32,22 @@ export type KennelInfo = {
       qrImage?: string;
     };
   };
-  /** 見学予約カレンダー（TimeRex等）の埋め込みURL。未設定なら静止画を表示 */
-  reservationUrl?: string;
+  /** 第一種動物取扱業の登録情報。未設定の項目は「―」で表示される */
+  animalBusiness: {
+    officeName: string;
+    registrationType: string;
+    type: string;
+    registrationNumber: string;
+    registrationDate: string;
+    expirationDate: string;
+    animalHandler: string;
+  };
 };
 
 /**
  * サイト全体で参照する犬舎の基本情報。
- * TODO: 住所・メールアドレス・動物取扱業登録情報はFigma・支給素材に記載がないためクライアント確認後に追記する。
+ * TODO: 空文字の項目はFigma・支給素材に記載がないため、クライアント確認後に記入すること。
+ *       とくに動物取扱業の登録情報は法令上の表示義務があるため、公開前に必ず埋める。
  */
 export const kennelInfo: KennelInfo = {
   name: "ドッグガーデンシュシュ",
@@ -41,14 +59,30 @@ export const kennelInfo: KennelInfo = {
   email: "",
   postalCode: "",
   address: "",
+  establishedYear: "",
+  businessContent: "犬のブリーディング、販売、里親募集",
+  access: {
+    station: "",
+    parking: "",
+  },
   sns: {
-    instagram: "https://www.instagram.com/",
-    tiktok: "https://www.tiktok.com/",
+    instagram: "https://www.instagram.com/d.g_chouchou/",
+    tiktok: "https://www.tiktok.com/@d.g_chouchou",
     line: {
-      url: "",
+      url: "https://lin.ee/ZBfUumi",
+      // TODO: LINE ID（@から始まる）が分かれば設定すると友だち追加ボタンの下に表示される
       id: "",
+      // TODO: 友だち追加用QRコード画像を public/assets/ に置いてパスを設定するとPC向けQRブロックが表示される
       qrImage: "",
     },
   },
-  reservationUrl: "",
+  animalBusiness: {
+    officeName: "",
+    registrationType: "第一種動物取扱業登録",
+    type: "販売",
+    registrationNumber: "",
+    registrationDate: "",
+    expirationDate: "",
+    animalHandler: "",
+  },
 };

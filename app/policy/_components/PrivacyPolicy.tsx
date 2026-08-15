@@ -62,13 +62,19 @@ const sections: Section[] = [
  * 掲載前に事業者側での内容確認を推奨します。
  */
 export const PrivacyPolicy = () => (
-  <div className="measure-700 rounded-[30px] bg-white px-6 py-10 shadow-pop md:px-[50px] md:py-12">
-    <div className="flex flex-col gap-8">
+  <div
+    id="privacy"
+    className="measure-700 rounded-[30px] bg-white px-6 py-10 shadow-pop md:px-[50px] md:py-12"
+  >
+    <h2 className="font-jp text-[18px] font-extrabold leading-[1.6] text-ink-light md:text-[20px]">
+      プライバシーポリシー
+    </h2>
+    <div className="mt-6 flex flex-col gap-8">
       {sections.map((section) => (
         <section key={section.title} className="flex flex-col gap-2">
-          <h2 className="font-jp text-[16px] font-extrabold leading-[1.6] text-ink-light md:text-[18px]">
+          <h3 className="font-jp text-[16px] font-extrabold leading-[1.6] text-ink-light md:text-[18px]">
             {section.title}
-          </h2>
+          </h3>
           {section.body && (
             <p className="font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
               {section.body}
@@ -91,9 +97,9 @@ export const PrivacyPolicy = () => (
       ))}
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-jp text-[16px] font-extrabold leading-[1.6] text-ink-light md:text-[18px]">
+        <h3 className="font-jp text-[16px] font-extrabold leading-[1.6] text-ink-light md:text-[18px]">
           8. お問い合わせ窓口
-        </h2>
+        </h3>
         <p className="font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
           個人情報の取扱いに関するお問い合わせは、公式LINEまたは以下の窓口までご連絡ください。
         </p>

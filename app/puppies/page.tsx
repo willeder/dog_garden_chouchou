@@ -4,6 +4,7 @@ import BackLink from "@/app/_layout/back";
 import { ContactSection } from "@/app/_components/contact";
 import { getPuppies } from "@/app/_api/puppies/get";
 import { generateMetadata as buildMetadata } from "@/app/_config/metadata";
+import { Suspense } from "react";
 import PuppyList from "./_components/PuppyList";
 
 // ISR: 1時間ごとに再生成（app/_config/isr.ts の defaultRevalidateTime と同値）
@@ -24,7 +25,10 @@ export default async function PuppiesPage() {
           <FadeInSection>
             <SectionHeading en="PUPPY INFO" ja="仔犬紹介" />
           </FadeInSection>
-          <PuppyList puppies={puppies} />
+          {/* useSearchParams を使うため Suspense で包む */}
+          <Suspense fallback={null}>
+            <PuppyList puppies={puppies} />
+          </Suspense>
         </div>
       </section>
 

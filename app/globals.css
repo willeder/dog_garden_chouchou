@@ -22,6 +22,10 @@
   --color-field: rgba(217, 217, 217, 0.5); /* 入力欄背景 */
   --color-placeholder: #d9d9d9; /* 画像プレースホルダー */
 
+  /* ステータス（dog_breeder_ran と同じ区分。色はchouchouのトンマナに合わせる） */
+  --color-negotiating: #aac5ab; /* 商談中 */
+  --color-sold: #a89f9f; /* 成約済み */
+
   /* 影 */
   --shadow-pop: 5px 5px 0 rgba(0, 0, 0, 0.15);
   --shadow-btn: 2px 2px 0 rgba(0, 0, 0, 0.2);
