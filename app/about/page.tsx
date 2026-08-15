@@ -42,22 +42,20 @@ export default function AboutPage() {
       <section className="bg-beige py-12" aria-labelledby="kennel-points">
         <div className="mx-auto flex max-w-[1024px] flex-col items-center gap-4 px-5 md:px-[81px]">
           <FadeInSection>
-            <div className="relative w-[320px] md:w-[390px]">
+            {/*
+              リボンのSVGに「犬舎の6つのこだわり」の文字が含まれているため、
+              テキストを重ねず alt で見出しの意味を持たせる。
+              文言を変更する場合はSVG自体の差し替えが必要。
+            */}
+            <h2 id="kennel-points" className="w-[320px] md:w-[390px]">
               <Image
                 src="/assets/about-heading-6points-ribbon.svg"
-                alt=""
-                aria-hidden
+                alt="犬舎の6つのこだわり"
                 width={390}
                 height={57}
                 className="h-auto w-full"
               />
-              <h2
-                id="kennel-points"
-                className="absolute inset-x-0 top-0 flex h-[92%] items-center justify-center font-jp text-[18px] font-extrabold leading-[1.6] text-ink-light md:text-[24px]"
-              >
-                犬舎の6つのこだわり
-              </h2>
-            </div>
+            </h2>
           </FadeInSection>
 
           <FadeInSection className="w-full">

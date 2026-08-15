@@ -300,6 +300,7 @@ Figma上でダミー／プレースホルダーだった箇所:
 | TOPのInstagram投稿画像 | `public/assets/top-insta-photo-1〜3.png` はサンプル。実際の投稿画像に差し替え |
 | キービジュアルの写真 | 縦長のため横長に切り抜くと上下が大きく切れる。**16:9の横長（1920×1080程度）3枚を推奨**。`app/_components/hero/data.ts` |
 | キービジュアルのキャッチコピー | Figmaに記載なし。暫定文言（`app/_components/hero/copy.ts`） |
+| 「犬舎の6つのこだわり」の見出し | 文字がSVG（`about-heading-6points-ribbon.svg`）に含まれるため、文言変更にはSVGの差し替えが必要 |
 | 仔犬詳細の価格表記 | Figma原文は「230,000万円」。誤記と判断し `230,000円` で実装 |
 | 「ビションフリーぜ」の表記 | Figma原文どおり（一般表記は「ビションフリーゼ」）。`app/_model/breed.ts` |
 | 生体保証の内容 | `dog_breeder_ran` の文面をベースにしたドラフト（`app/_data/warrantyData.ts`）。保証日数・返金範囲は必ず確認 |
