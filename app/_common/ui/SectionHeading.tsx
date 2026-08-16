@@ -3,8 +3,13 @@ import Image from "next/image";
 type SectionHeadingProps = {
   /** 骨型プレート内の英字（例: ABOUT US） */
   en: string;
-  /** プレート下の日本語見出し（例: ドックガーデンシュシュについて） */
+  /** プレート下の日本語見出し（例: ドッグガーデンシュシュについて） */
   ja?: string;
+  /**
+   * 見出しレベル。各ページの先頭の見出しだけ "h1" にする。
+   * SEO上、1ページに h1 は1つだけ置き、そのページの主題を表す語を含める。
+   */
+  as?: "h1" | "h2";
   className?: string;
 };
 
@@ -12,7 +17,12 @@ type SectionHeadingProps = {
  * 骨型プレート＋英字＋日本語見出しの共通セクションタイトル。
  * Figma: base/Frame 21（328×67のプレート、影込みの実寸は334×73）
  */
-export const SectionHeading = ({ en, ja, className = "" }: SectionHeadingProps) => (
+export const SectionHeading = ({
+  en,
+  ja,
+  as: Heading = "h2",
+  className = "",
+}: SectionHeadingProps) => (
   <div className={`flex flex-col items-center ${className}`}>
     <div className="relative h-[55px] w-[270px] sm:h-[67px] sm:w-[328px]">
       {/* プレートは影の分だけ外側にはみ出す（Figma: inset -1.49% -0.91% -7.46%） */}
@@ -29,9 +39,9 @@ export const SectionHeading = ({ en, ja, className = "" }: SectionHeadingProps) 
       </span>
     </div>
     {ja && (
-      <h2 className="text-center font-jp text-[20px] font-extrabold leading-[1.6] text-ink-light sm:text-[24px]">
+      <Heading className="text-center font-jp text-[20px] font-extrabold leading-[1.6] text-ink-light sm:text-[24px]">
         {ja}
-      </h2>
+      </Heading>
     )}
   </div>
 );

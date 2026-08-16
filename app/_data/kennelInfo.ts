@@ -32,6 +32,14 @@ export type KennelInfo = {
       qrImage?: string;
     };
   };
+  /**
+   * 外部の掲載ページ。構造化データの sameAs に出力し、
+   * 「この犬舎＝この公式サイト」であることをGoogleに伝えるために使う。
+   */
+  externalProfiles?: {
+    /** みんなのブリーダーの犬舎ページURL */
+    minnaNoBreeder?: string;
+  };
   /** 第一種動物取扱業の登録情報。未設定の項目は「―」で表示される */
   animalBusiness: {
     officeName: string;
@@ -77,6 +85,11 @@ export const kennelInfo: KennelInfo = {
       // TODO: 友だち追加用QRコード画像を public/assets/ に置いてパスを設定するとPC向けQRブロックが表示される
       qrImage: "",
     },
+  },
+  externalProfiles: {
+    // みんなのブリーダーの犬舎ページ。構造化データの sameAs に出力し、
+    // 「みんなのブリーダーに載っているこの犬舎の公式サイト」としてGoogleに紐づける。
+    minnaNoBreeder: "https://www.min-breeder.com/breeder_e913201.html",
   },
   // 第一種動物取扱業の登録情報（みんなのブリーダー掲載の登録内容に準拠）
   animalBusiness: {

@@ -7,7 +7,12 @@ import LineGuide from "@/app/_common/LineGuide";
  * Figma: TOP_PC / CONTACTUS（1024×1093 / bg BLUE ＋ 雲の装飾）
  * 中身は入力フォームではなく公式LINEへの導線。下層ページからも同じ構成で呼び出す。
  */
-export const ContactSection = () => (
+type ContactSectionProps = {
+  /** お問い合わせページではこのセクションがページの主題になるため "h1" を渡す */
+  headingLevel?: "h1" | "h2";
+};
+
+export const ContactSection = ({ headingLevel = "h2" }: ContactSectionProps) => (
   <section className="relative overflow-hidden bg-blue py-20" aria-labelledby="contact-title">
     {/* 装飾の雲 */}
     <div className="pointer-events-none absolute inset-0 hidden lg:block" aria-hidden>
@@ -29,7 +34,7 @@ export const ContactSection = () => (
 
     <div className="relative mx-auto flex max-w-[1024px] flex-col items-center gap-8 px-5 md:px-[162px]">
       <FadeInSection className="flex flex-col items-center">
-        <SectionHeading en="CONTACT US" ja="お問い合わせ" />
+        <SectionHeading en="CONTACT US" ja="お問い合わせ" as={headingLevel} />
         <p
           id="contact-title"
           className="measure-560 mt-2 text-center font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]"

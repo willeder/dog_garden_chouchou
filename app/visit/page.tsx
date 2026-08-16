@@ -4,10 +4,13 @@ import FadeInSection from "@/app/_common/FadeInSection";
 import BackLink from "@/app/_layout/back";
 import { ContactSection } from "@/app/_components/contact";
 import { generateMetadata as buildMetadata } from "@/app/_config/metadata";
+import { breadcrumbJsonLd } from "@/app/_config/structuredData";
+import JsonLd from "@/app/_common/JsonLd";
 
 export const metadata = buildMetadata(
   "見学について",
-  "ドッグガーデンシュシュの見学に関するご案内です。見学のお申し込みは公式LINEにて承っております。"
+  "福岡県筑紫野市のブリーダー「ドッグガーデンシュシュ」の見学案内です。見学は完全予約制で、お申し込みは公式LINEにて承っております。",
+  "/visit"
 );
 
 /** TODO: Figmaはダミーテキストのため、実際の注意事項を受領後に差し替える */
@@ -21,11 +24,13 @@ const notes = [
 export default function VisitPage() {
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "見学について", path: "/visit" }])} />
+
       {/* VISITUS_1: 見学の注意点 */}
       <section className="relative bg-blue pt-8">
         <CloudDecoration />
         <FadeInSection className="relative mx-auto flex max-w-[1024px] flex-col items-center gap-4 px-5 md:px-[232px]">
-          <SectionHeading en="VISIT US" ja="見学の注意点" />
+          <SectionHeading en="VISIT US" ja="見学の注意点" as="h1" />
           <ul className="measure-560 flex flex-col gap-2">
             {notes.map((note) => (
               <li

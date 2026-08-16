@@ -1,6 +1,10 @@
 import Image from "next/image";
 import Button from "@/app/_common/ui/Button";
 import FadeInSection from "@/app/_common/FadeInSection";
+import { adoptionMessage } from "@/app/_data/adoptionMessage";
+
+/** TOPには里親募集ページ本文の冒頭2段落だけを抜粋し、続きは READ MORE で /adoption へ誘導する */
+const excerpt = adoptionMessage.paragraphs.slice(0, 2);
 
 /** Figma: TOP_PC / INFO（1024×396 / bg BEIGE） */
 export const AdoptionSection = () => (
@@ -16,17 +20,23 @@ export const AdoptionSection = () => (
       />
 
       <div className="flex flex-col items-center gap-6 md:max-w-[421px]">
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-3">
           <h2
             id="top-adoption-title"
             className="text-center font-jp text-[20px] font-extrabold leading-[1.6] text-ink-light md:text-[24px]"
           >
             里親のお迎えについて
           </h2>
-          <p className="font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
-            わんちゃんたちがもっと幸せに暮らせるように、里親さんを募集しています。年齢を重ねると体の変化だけでなく、犬舎の中でも世代交代が起きて環境が変わりやすくなります。そんな中でも、ひとりひとりが家族としてたっぷりの愛情をもらいながら、穏やかに暮らしてほしい。そんな願いを込めて、里親さんを募集しています。
-            新しいご家族として、お迎えを検討していただけたら嬉しいです。
-          </p>
+          <div className="flex flex-col gap-4">
+            {excerpt.map((paragraph) => (
+              <p
+                key={paragraph}
+                className="whitespace-pre-line font-jp text-[14px] leading-[1.9] text-ink-light md:text-[16px]"
+              >
+                {paragraph}
+              </p>
+            ))}
+          </div>
         </div>
         <Button href="/adoption" variant="green">
           READ MORE

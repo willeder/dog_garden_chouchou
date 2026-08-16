@@ -5,21 +5,26 @@ import Button from "@/app/_common/ui/Button";
 import BackLink from "@/app/_layout/back";
 import { warrantyItems } from "@/app/_data/warrantyData";
 import { generateMetadata as buildMetadata } from "@/app/_config/metadata";
+import { breadcrumbJsonLd } from "@/app/_config/structuredData";
+import JsonLd from "@/app/_common/JsonLd";
 import WarrantyCard from "./_components/WarrantyCard";
 
 export const metadata = buildMetadata(
   "生体保証",
-  "ドッグガーデンシュシュの生体保証についてご案内します。"
+  "福岡県筑紫野市のブリーダー「ドッグガーデンシュシュ」の生体保証についてご案内します。安心してお迎えいただくための保証内容と条件をまとめています。",
+  "/warranty"
 );
 
 export default function WarrantyPage() {
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "生体保証", path: "/warranty" }])} />
+
       <section className="relative overflow-hidden bg-blue py-8">
         <CloudDecoration />
         <div className="relative mx-auto flex max-w-[1024px] flex-col items-center gap-8 px-5 md:px-[162px]">
           <FadeInSection className="flex flex-col items-center">
-            <SectionHeading en="WARRANTY" ja="生体保証" />
+            <SectionHeading en="WARRANTY" ja="生体保証" as="h1" />
             <p className="measure-560 mt-2 text-center font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
               安心してお迎えいただけるよう、すべての仔犬に生体保証をお付けしています。
               <br />

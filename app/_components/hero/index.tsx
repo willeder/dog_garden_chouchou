@@ -44,7 +44,7 @@ export const HeroSection = () => (
           />
         </div>
 
-        <SectionHeading en="ABOUT US" ja="ドックガーデンシュシュについて" className="relative z-10" />
+        <SectionHeading en="ABOUT US" ja="ドッグガーデンシュシュについて" className="relative z-10" />
 
         <div className="mt-4 flex flex-col items-center gap-4">
           <p className="measure-560 font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">

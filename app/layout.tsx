@@ -3,7 +3,9 @@ import { M_PLUS_1p, Poller_One } from "next/font/google";
 import { Header } from "./_layout/header";
 import { Footer } from "./_layout/footer";
 import { GoogleAnalytics } from "./_components/GoogleAnalytics";
+import JsonLd from "./_common/JsonLd";
 import { defaultMetadata } from "./_config/metadata";
+import { organizationJsonLd, webSiteJsonLd } from "./_config/structuredData";
 import "./globals.css";
 
 const mplus1p = M_PLUS_1p({
@@ -33,6 +35,8 @@ export default function RootLayout({
       <body
         className={`${mplus1p.variable} ${pollerOne.variable} flex min-h-screen flex-col bg-beige text-ink-light`}
       >
+        {/* 犬舎そのものの情報。全ページに出すことで犬舎名検索での同定を強める */}
+        <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
         {gaId && <GoogleAnalytics gaId={gaId} />}
         <Header />
         <main className="flex-grow pt-[72px] md:pt-[148px]">{children}</main>

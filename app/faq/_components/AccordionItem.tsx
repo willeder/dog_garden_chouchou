@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { Faq } from "@/app/_model/faq";
+import AnswerBlocks from "./AnswerBlocks";
 
 /**
  * Figma: Q＆A_1 のアコーディオン
@@ -36,16 +37,14 @@ export const AccordionItem = ({ faq, defaultOpen = false }: { faq: Faq; defaultO
             aria-hidden
             width={28}
             height={13}
-            className={`shrink-0 transition-transform ${isOpen ? "" : "rotate-180"}`}
+            className={`shrink-0 transition-[rotate] duration-200 ${isOpen ? "" : "rotate-180"}`}
           />
         </button>
       </h3>
 
       {isOpen && (
         <div className="rounded-b-[10px] bg-white px-6 py-8 md:px-[68px] md:py-[43px]">
-          <p className="measure-560 mx-auto font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
-            {faq.answer}
-          </p>
+          <AnswerBlocks blocks={faq.answer} />
         </div>
       )}
     </li>

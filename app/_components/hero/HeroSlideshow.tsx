@@ -65,10 +65,14 @@ export const HeroSlideshow = () => {
       />
 
       {/* キャッチコピー */}
-      <div className="relative mx-auto flex h-full max-w-[1024px] flex-col items-start justify-center px-6 pb-[14%] md:px-10 md:pb-[10%]">
-        <h2 className="whitespace-pre-line font-jp text-[22px] font-extrabold leading-[1.5] text-ink drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)] md:text-[36px]">
+      <div className="relative z-10 mx-auto flex h-full max-w-[1024px] flex-col items-start justify-center px-6 pb-[14%] md:px-10 md:pb-[10%]">
+        {/* ページ唯一のh1。デザインを壊さないよう小さめに置く */}
+        <h1 className="mb-2 font-jp text-[11px] font-extrabold leading-[1.6] tracking-[0.06em] text-ink drop-shadow-[0_1px_3px_rgba(255,255,255,1)] md:text-[14px]">
+          {heroCopy.h1}
+        </h1>
+        <p className="whitespace-pre-line font-jp text-[22px] font-extrabold leading-[1.5] text-ink drop-shadow-[0_1px_2px_rgba(255,255,255,0.9)] md:text-[36px]">
           {heroCopy.main}
-        </h2>
+        </p>
         <p className="mt-3 max-w-[300px] font-jp text-[13px] font-extrabold leading-[1.6] text-ink drop-shadow-[0_1px_3px_rgba(255,255,255,1)] md:max-w-[420px] md:text-[16px]">
           {heroCopy.sub}
         </p>

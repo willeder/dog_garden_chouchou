@@ -26,6 +26,10 @@ export const PuppySpec = ({ puppy }: { puppy: Puppy }) => {
 
   return (
     <div className="measure-700 flex flex-col gap-3">
+      {/* ページ唯一のh1。この個体が何の犬かを検索エンジンとユーザーの両方に示す */}
+      <h1 className="font-jp text-[18px] font-extrabold leading-[1.6] text-ink-light md:text-[22px]">
+        {puppy.breed}（{puppy.sex}）
+      </h1>
       <SpecTable rows={rows} />
       {puppy.breedExplanation && (
         <p className="font-jp text-[14px] leading-[1.6] text-ink-light">

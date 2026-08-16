@@ -5,13 +5,16 @@ import FadeInSection from "@/app/_common/FadeInSection";
 import BackLink from "@/app/_layout/back";
 import { getVoices } from "@/app/_api/voices/get";
 import { generateMetadata as buildMetadata } from "@/app/_config/metadata";
+import { breadcrumbJsonLd } from "@/app/_config/structuredData";
+import JsonLd from "@/app/_common/JsonLd";
 
 // ISR: 1時間ごとに再生成（app/_config/isr.ts の defaultRevalidateTime と同値）
 export const revalidate = 3600;
 
 export const metadata = buildMetadata(
   "お客様の声",
-  "ドッグガーデンシュシュからわんちゃんをお迎えいただいたご家族の声をご紹介します。"
+  "福岡県筑紫野市のブリーダー「ドッグガーデンシュシュ」から子犬をお迎えいただいたご家族の声をご紹介します。",
+  "/voice"
 );
 
 export default async function VoicePage() {
@@ -19,11 +22,13 @@ export default async function VoicePage() {
 
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "お客様の声", path: "/voice" }])} />
+
       {/* THANKYOU_1 */}
       <section className="relative bg-blue pt-8">
         <CloudDecoration />
         <FadeInSection className="relative mx-auto flex max-w-[1024px] flex-col items-center gap-4 px-5 md:px-[232px]">
-          <SectionHeading en="THANK YOU" ja="お客様の声" />
+          <SectionHeading en="THANK YOU" ja="お客様の声" as="h1" />
           <p className="measure-560 font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
             わんちゃんとの暮らしの中で感じた喜びや感動、家族として迎えた日々の幸せなエピソードをご紹介しています。
             お迎えをご検討中の方も、実際の声からわんちゃんとの暮らしをイメージしていただけたら嬉しいです。

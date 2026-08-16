@@ -3,6 +3,8 @@ import SectionHeading from "@/app/_common/ui/SectionHeading";
 import FadeInSection from "@/app/_common/FadeInSection";
 import BackLink from "@/app/_layout/back";
 import { generateMetadata as buildMetadata } from "@/app/_config/metadata";
+import { breadcrumbJsonLd } from "@/app/_config/structuredData";
+import JsonLd from "@/app/_common/JsonLd";
 import PointCard from "./_components/PointCard";
 import Company from "./_components/Company";
 import Registration from "./_components/Registration";
@@ -12,16 +14,19 @@ import { kennelPoints } from "./_components/data";
 
 export const metadata = buildMetadata(
   "犬舎について",
-  "ドッグガーデンシュシュの犬舎のこだわりと、ブリーダーの想いをご紹介します。"
+  "福岡県筑紫野市のブリーダー「ドッグガーデンシュシュ」の犬舎紹介です。6つのこだわり、ブリーダーの想い、スタッフの1日、第一種動物取扱業の登録情報をご案内します。",
+  "/about"
 );
 
 export default function AboutPage() {
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "犬舎について", path: "/about" }])} />
+
       {/* ABOUTUS_1 */}
       <section className="bg-beige pt-8">
         <FadeInSection className="mx-auto flex max-w-[1024px] flex-col items-center gap-4 px-5 md:px-[162px]">
-          <SectionHeading en="ABOUT US" ja="ドックガーデンシュシュについて" />
+          <SectionHeading en="ABOUT US" ja="ドッグガーデンシュシュについて" as="h1" />
           <Image
             src="/assets/about-hero-photo.png"
             alt="ドッグガーデンシュシュの犬舎で過ごすわんちゃんたち"

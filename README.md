@@ -38,7 +38,7 @@ npm run dev                  # http://localhost:3000
 
 ```
 app/
-├── _api/          microCMS取得層（puppies / voices / rehoming）
+├── _api/          microCMS取得層（puppies / voices）
 ├── _common/       ページ横断の共通コンポーネント（ui / LineGuide / PhotoGallery / FadeInSection）
 ├── _components/   TOPページのセクション ＋ GoogleAnalytics
 ├── _config/       ISR設定・メタデータ生成
@@ -47,7 +47,7 @@ app/
 ├── _lib/          microCMSクライアント・日付/金額フォーマッタ
 ├── _model/        ドメインモデル（Puppy / Voice / Faq ほか）
 ├── about/         犬舎について
-├── adoption/      里親募集（一覧 + /[id] 詳細）
+├── adoption/      里親募集（メッセージ ＋ 公式LINE導線。個別の犬情報は掲載しない）
 ├── contact/       お問い合わせ（公式LINE導線）
 ├── faq/           よくある質問
 ├── policy/        利用規約・プライバシーポリシー
@@ -101,7 +101,7 @@ app/
 | `_common/ui/SectionHeading.tsx` | 骨型プレート＋英字＋日本語見出し（Figma共通パーツ） |
 | `_common/ui/CloudDecoration.tsx` | 下層ページ上部の雲の装飾 |
 | `_common/LineGuide/` | 公式LINEへの導線（ran の `LineGuide.tsx` 相当） |
-| `_common/PhotoGallery/` | メイン画像＋サムネイルのギャラリー（仔犬詳細・里親募集詳細で共用） |
+| `_common/PhotoGallery/` | メイン画像＋サムネイルのギャラリー（仔犬詳細で使用） |
 | `_common/ui/SpecTable.tsx` | スペック表（同上。項目が奇数のときは最終行を2列ぶち抜き） |
 | `_layout/back/` | Figma base/BACK コンポーネント |
 | `_data/mockPuppies.ts` `mockVoices.ts` | microCMS未接続時のフォールバック（ran にはない仕組み） |
@@ -193,25 +193,11 @@ chouchou では `images` 1フィールドにまとめています。
 
 ※ `title` は `福岡市 T様宅　マルチーズ　〇〇ちゃん` の形式を想定。
 
-### `rehoming`（リスト形式）
+### `rehoming` は不要
 
-`dog_breeder_ran` の `rehoming` API と同じ項目構成です。
-ran は画像を `images1` / `images2` の2フィールドに分けていますが、
-chouchou では `puppies` と揃えて `images` 1フィールドにまとめています。
-
-| フィールドID | 表示名 | 種類 | 必須 |
-| --- | --- | --- | --- |
-| `name` | お名前 | テキストフィールド | ○ |
-| `images` | 写真 | 複数画像 | ○ |
-| `breed` | 犬種 | テキストフィールド | ○ |
-| `sex` | 性別 | セレクトフィールド（`男の子` / `女の子`） | ○ |
-| `birthday` | 誕生日 | 日時 | ○ |
-| `size` | サイズ | テキストフィールド | ○ |
-| `color` | 毛色 | テキストフィールド | ○ |
-| `weight` | 体重(kg) | 数値 | ○ |
-| `vaccination` | ワクチン接種済み | 真偽値 | |
-| `neutering` | 避妊・去勢済み | 真偽値 | |
-| `description` | ブリーダーからの紹介文 | テキストエリア | ○ |
+里親募集ページは個別の犬情報を掲載せず公式LINEへの誘導のみとする方針のため、
+`rehoming` API・`/adoption/[id]` 詳細ページ・`RehomingCard` は削除済みです。
+将来1頭ずつ掲載する運用に戻す場合は git 履歴から復元できます。
 
 ISRは `app/_config/isr.ts` の `defaultRevalidateTime`（3600秒）を基準にしています。
 仔犬一覧は1ページ12件のクライアントサイドページネーション（`puppies/_components/Pagination.tsx`）。

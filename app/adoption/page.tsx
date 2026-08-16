@@ -2,30 +2,29 @@ import Image from "next/image";
 import SectionHeading from "@/app/_common/ui/SectionHeading";
 import CloudDecoration from "@/app/_common/ui/CloudDecoration";
 import FadeInSection from "@/app/_common/FadeInSection";
+import LineGuide from "@/app/_common/LineGuide";
 import BackLink from "@/app/_layout/back";
-import { getRehomingDogs } from "@/app/_api/rehoming/get";
 import { adoptionMessage } from "@/app/_data/adoptionMessage";
 import { generateMetadata as buildMetadata } from "@/app/_config/metadata";
-import RehomingCard from "./_components/RehomingCard";
-
-// ISR: 1時間ごとに再生成（app/_config/isr.ts の defaultRevalidateTime と同値）
-export const revalidate = 3600;
+import { breadcrumbJsonLd } from "@/app/_config/structuredData";
+import JsonLd from "@/app/_common/JsonLd";
 
 export const metadata = buildMetadata(
   "里親募集",
-  "ドッグガーデンシュシュでは、新しいご家族との出会いを待っているわんちゃんの里親を募集しています。"
+  "福岡県筑紫野市のブリーダー「ドッグガーデンシュシュ」の里親募集ページです。犬舎で暮らしてきた子たちの新しいご家族を探しています。ご相談は公式LINEにて承ります。",
+  "/adoption"
 );
 
-export default async function AdoptionPage() {
-  const dogs = await getRehomingDogs();
-
+export default function AdoptionPage() {
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd([{ name: "里親募集", path: "/adoption" }])} />
+
       {/* INFO_1: 里親のお迎えについて */}
       <section className="relative bg-blue pt-8">
         <CloudDecoration />
         <FadeInSection className="relative mx-auto flex max-w-[1024px] flex-col items-center gap-6 px-5 md:px-[162px]">
-          <SectionHeading en="INFO" ja="里親のお迎えについて" />
+          <SectionHeading en="INFO" ja="里親のお迎えについて" as="h1" />
 
           <Image
             src="/assets/adoption-hero.png"
@@ -77,30 +76,25 @@ export default async function AdoptionPage() {
         </FadeInSection>
       </section>
 
-      {/* 里親募集中のわんちゃん一覧 */}
-      <section className="bg-blue pb-20 pt-12" aria-labelledby="rehoming-list">
+      {/* お問い合わせ（公式LINE）。里親募集中の子の情報は個別掲載せず、LINEでご案内する */}
+      <section className="bg-blue pb-20 pt-12" aria-labelledby="adoption-contact">
         <div className="mx-auto flex max-w-[1024px] flex-col items-center gap-8 px-5 md:px-10">
-          <FadeInSection>
+          <FadeInSection className="flex flex-col items-center gap-3 text-center">
             <h2
-              id="rehoming-list"
+              id="adoption-contact"
               className="font-jp text-[20px] font-extrabold leading-[1.6] text-ink-light md:text-[24px]"
             >
-              里親募集中のわんちゃん
+              里親のお問い合わせ
             </h2>
+            <p className="measure-560 font-jp text-[14px] leading-[1.9] text-ink-light md:text-[16px]">
+              現在里親を募集している子のご紹介は、公式LINEにて個別にご案内しています。
+              ご家族構成や飼育環境をお伺いしたうえで、その子に合ったお迎えをご相談させていただきます。
+              まずはお気軽にメッセージをお送りください。
+            </p>
           </FadeInSection>
 
-          <FadeInSection className="w-full">
-            {dogs.length === 0 ? (
-              <p className="py-12 text-center font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
-                現在、里親を募集しているわんちゃんはいません。次のご縁をお待ちください。
-              </p>
-            ) : (
-              <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-                {dogs.map((dog) => (
-                  <RehomingCard key={dog.id} dog={dog} />
-                ))}
-              </ul>
-            )}
+          <FadeInSection className="flex w-full justify-center">
+            <LineGuide />
           </FadeInSection>
         </div>
       </section>
