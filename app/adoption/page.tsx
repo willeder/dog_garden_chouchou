@@ -41,7 +41,7 @@ export default async function AdoptionPage() {
 
       {/* 里親募集中のわんちゃん一覧 */}
       <section className="bg-blue pb-20 pt-12" aria-labelledby="rehoming-list">
-        <div className="mx-auto flex max-w-[1024px] flex-col items-center gap-8 px-5 md:px-10 lg:px-[100px]">
+        <div className="mx-auto flex max-w-[1024px] flex-col items-center gap-8 px-5 md:px-10">
           <FadeInSection className="flex flex-col items-center">
             <h2
               id="rehoming-list"
@@ -62,7 +62,8 @@ export default async function AdoptionPage() {
                 現在、里親を募集しているわんちゃんはいません。次のご縁をお待ちください。
               </p>
             ) : (
-              <ul className="grid grid-cols-1 justify-items-center gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              // グリッドの列数も dog_breeder_ran に合わせる（2 → 3 → 4カラム）
+              <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {dogs.map((dog) => (
                   <RehomingCard key={dog.id} dog={dog} />
                 ))}
