@@ -1,17 +1,20 @@
 import { ImageWithSize } from "./image";
 import { Sex } from "./sex";
 
-/** 親犬（dog_breeder_ran の Parent と同じ項目構成） */
+/**
+ * 親犬（dog_breeder_ran の Parent と同じ項目構成）
+ * microCMS側で未入力・未作成のフィールドがあり得るため、写真と名前以外は任意にしている。
+ */
 export type Parent = {
   id: string;
-  image: ImageWithSize;
+  image?: ImageWithSize;
   name: string;
-  breed: string;
-  sex: Sex;
-  birthday: Date;
-  color: string;
+  breed?: string;
+  sex?: Sex;
+  birthday?: Date;
+  color?: string;
   /** 体重（kg） */
-  weight: number;
+  weight?: number;
 };
 
 export type Status = "商談中" | "成約済み";
@@ -33,8 +36,8 @@ export type Puppy = {
   expectedHeight?: number;
   /** 価格（円・税込） */
   price?: number;
-  /** ブリーダーからのメッセージ */
-  message: string;
+  /** ブリーダーからのメッセージ。未入力ならセクションごと非表示になる */
+  message?: string;
   mother?: Parent;
   father?: Parent;
   /** 未設定＝募集中 */

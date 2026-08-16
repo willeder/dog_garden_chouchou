@@ -14,92 +14,60 @@ type PhotoGalleryProps = {
 };
 
 /**
- * Figma: PUPPYINFO_detail_2（メイン704×350 ＋ サムネイル83×99 ＋ 左右矢印）
- * 仔犬詳細・里親募集詳細で共用する
+ * 写真ギャラリー。構成は dog_breeder_ran の pictures.tsx に合わせている。
+ *  - メイン写真は 4:3 の枠に object-contain（トリミングせず全体を見せる）
+ *  - サムネイルは折り返しの一覧。選択中は枠線で示す
  */
 export const PhotoGallery = ({ images, alt, status }: PhotoGalleryProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (images.length === 0) {
-    return <div className="measure-700 aspect-[704/350] w-full bg-placeholder" />;
+    return <div className="aspect-[4/3] w-full rounded-[10px] bg-placeholder" />;
   }
 
-  const move = (direction: -1 | 1) =>
-    setActiveIndex((current) => (current + direction + images.length) % images.length);
-
   return (
-    <div className="flex w-full flex-col items-center gap-4">
-      <div className="relative aspect-[704/350] w-full max-w-[704px] overflow-hidden">
+    <div className="flex w-full flex-col gap-2">
+      {/* メイン写真：写真の縦横比を問わず全体が見えるように contain */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[10px] bg-beige">
         <Image
           src={images[activeIndex].url}
           alt={alt}
           fill
-          sizes="(min-width: 1024px) 704px, 100vw"
+          sizes="(min-width: 768px) 640px, 100vw"
           priority
-          // 704×350の横長クロップは縦長写真の上端だけを切り出してしまうため中央基準にする
-          className="object-cover object-center"
+          className="object-contain object-center"
+          draggable={false}
         />
         {status && <StatusBadge status={status} />}
       </div>
 
       {images.length > 1 && (
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => move(-1)}
-            aria-label="前の写真へ"
-            className="shrink-0 p-1 transition-opacity hover:opacity-60"
-          >
-            <Image
-              src="/assets/puppy-detail-arrow.svg"
-              alt=""
-              aria-hidden
-              width={26}
-              height={23}
-              className="-rotate-90"
-            />
-          </button>
-
-          <ul className="flex items-center gap-4">
-            {images.map((image, index) => (
-              <li key={image.url + index}>
-                <button
-                  type="button"
-                  onClick={() => setActiveIndex(index)}
-                  aria-label={`${index + 1}枚目の写真を表示`}
-                  aria-current={index === activeIndex}
-                  className={`relative block h-[99px] w-[83px] transition-opacity ${
-                    index === activeIndex ? "opacity-100" : "opacity-60 hover:opacity-90"
-                  }`}
-                >
-                  <Image
-                    src={image.url}
-                    alt=""
-                    fill
-                    sizes="83px"
-                    className="object-cover object-top"
-                  />
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          <button
-            type="button"
-            onClick={() => move(1)}
-            aria-label="次の写真へ"
-            className="shrink-0 p-1 transition-opacity hover:opacity-60"
-          >
-            <Image
-              src="/assets/puppy-detail-arrow.svg"
-              alt=""
-              aria-hidden
-              width={26}
-              height={23}
-              className="rotate-90"
-            />
-          </button>
-        </div>
+        <ul className="flex w-full flex-wrap">
+          {images.map((image, index) => (
+            <li key={`${image.url}-${index}`} className="w-1/4 p-[2px] sm:w-1/5">
+              <button
+                type="button"
+                onClick={() => setActiveIndex(index)}
+                aria-label={`${index + 1}枚目の写真を表示`}
+                aria-current={index === activeIndex}
+                className={`relative block aspect-[4/3] w-full overflow-hidden rounded-[6px] transition-all ${
+                  index === activeIndex
+                    ? "ring-2 ring-pink"
+                    : "opacity-70 hover:opacity-100 hover:ring-1 hover:ring-pink"
+                }`}
+              >
+                <Image
+                  src={image.url}
+                  alt=""
+                  fill
+                  sizes="160px"
+                  className="object-cover object-center"
+                  draggable={false}
+                />
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

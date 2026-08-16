@@ -1,10 +1,11 @@
-/** ブリーダーからのメッセージ（ran の breederMessage.tsx 相当） */
+/**
+ * ブリーダーからのメッセージ。
+ * 内側に囲みを置き、長文でもカードが伸びすぎないよう高さ上限＋スクロールにする
+ * （dog_breeder_ran の breederMessage.tsx と同じ扱い）。
+ */
 export const BreederMessage = ({ message }: { message: string }) => (
-  <div className="measure-700 rounded-[30px] bg-white px-6 py-10 shadow-pop md:px-[50px] md:py-12">
-    <h2 className="font-jp text-[16px] font-extrabold leading-[1.6] text-ink-light md:text-[18px]">
-      ブリーダーからのメッセージ
-    </h2>
-    <p className="mt-2 whitespace-pre-line font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
+  <div className="max-h-[25.25rem] overflow-y-auto rounded-[10px] border border-pink bg-beige p-4">
+    <p className="whitespace-pre-line font-jp text-[14px] font-medium leading-[1.9] text-ink-light md:text-[15px]">
       {message}
     </p>
   </div>

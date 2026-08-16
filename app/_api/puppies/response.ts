@@ -7,22 +7,23 @@ export type StatusResponse = Status;
 /** microCMS「parents」APIのレスポンス型（puppies から参照される） */
 export type MCParent = {
   id: string;
-  image: ImageResponse[]; // 要素数は1つ
+  image?: ImageResponse[]; // 要素数は1つ
   name: string;
-  breed: string;
-  sex: SexResponse[]; // 要素数は1つ
-  birthday: DateStringResponse;
-  color: string;
-  weight: number;
+  breed?: string;
+  sex?: SexResponse[]; // 要素数は1つ
+  birthday?: DateStringResponse;
+  color?: string;
+  weight?: number;
 };
 
 const newParentFromMC = (response: MCParent): Parent => ({
   id: response.id,
-  image: response.image[0],
+  image: response.image?.[0],
   name: response.name,
   breed: response.breed,
-  sex: response.sex[0],
-  birthday: parseLocalDate(response.birthday),
+  sex: response.sex?.[0],
+  // 未入力の日時を parseLocalDate に渡すと Invalid Date になるためガードする
+  birthday: response.birthday ? parseLocalDate(response.birthday) : undefined,
   color: response.color,
   weight: response.weight,
 });
@@ -42,7 +43,7 @@ export type MCPuppy = {
   expected_weight?: number;
   expected_height?: number;
   price?: number;
-  message: string;
+  message?: string;
   mother?: MCParent;
   father?: MCParent;
   status: StatusResponse[]; // 要素数は0または1つ

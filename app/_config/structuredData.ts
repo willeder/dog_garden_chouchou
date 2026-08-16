@@ -113,7 +113,7 @@ export const puppyJsonLd = (puppy: Puppy) => {
     "@id": `${url}#product`,
     name,
     url,
-    description: puppy.message,
+    ...(puppy.message ? { description: puppy.message } : {}),
     image: puppy.images.map((image) => image.url),
     category: puppy.breed,
     color: puppy.color,
