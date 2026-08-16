@@ -4,6 +4,7 @@ import CloudDecoration from "@/app/_common/ui/CloudDecoration";
 import FadeInSection from "@/app/_common/FadeInSection";
 import BackLink from "@/app/_layout/back";
 import { getRehomingDogs } from "@/app/_api/rehoming/get";
+import { adoptionMessage } from "@/app/_data/adoptionMessage";
 import { generateMetadata as buildMetadata } from "@/app/_config/metadata";
 import RehomingCard from "./_components/RehomingCard";
 
@@ -23,8 +24,9 @@ export default async function AdoptionPage() {
       {/* INFO_1: 里親のお迎えについて */}
       <section className="relative bg-blue pt-8">
         <CloudDecoration />
-        <FadeInSection className="relative mx-auto flex max-w-[1024px] flex-col items-center gap-4 px-5 md:px-[162px]">
+        <FadeInSection className="relative mx-auto flex max-w-[1024px] flex-col items-center gap-6 px-5 md:px-[162px]">
           <SectionHeading en="INFO" ja="里親のお迎えについて" />
+
           <Image
             src="/assets/adoption-hero.png"
             alt="里親さんのもとへ向かうわんちゃん"
@@ -33,27 +35,58 @@ export default async function AdoptionPage() {
             priority
             className="measure-700 h-auto object-cover object-top"
           />
-          <p className="measure-560 font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
-            当犬舎ではしっかりとご飯が食べれるようになってからのお渡しになります。毎日母犬・兄妹犬・色々な子と遊びながら、スタッフとの触れ合いで人もワンチャンも大好きな子達に育っています。子犬期はよく食べよく遊びたまにお姉さん犬達から怒られたりと大切な時期です。沢山の触れ合いを大切に愛嬌のある元気な子達に育てています。
-          </p>
+
+          <div className="measure-700 flex flex-col items-center gap-4">
+            {/* 絵文字（🌷）は装飾の花アイコンに置き換えている */}
+            <h2 className="flex items-center gap-2 text-center font-jp text-[18px] font-extrabold leading-[1.6] text-ink-light md:text-[22px]">
+              <Image
+                src="/assets/flower-pink.svg"
+                alt=""
+                aria-hidden
+                width={24}
+                height={35}
+                className="h-[26px] w-auto shrink-0"
+              />
+              {adoptionMessage.title}
+            </h2>
+
+            <div className="measure-560 flex flex-col gap-4">
+              {adoptionMessage.paragraphs.map((paragraph) => (
+                <p
+                  key={paragraph}
+                  className="whitespace-pre-line font-jp text-[14px] leading-[1.9] text-ink-light md:text-[16px]"
+                >
+                  {paragraph}
+                </p>
+              ))}
+
+              {/* 原稿末尾の絵文字（🐾）は装飾の肉球アイコンに置き換えている */}
+              <p className="whitespace-pre-line font-jp text-[14px] leading-[1.9] text-ink-light md:text-[16px]">
+                {adoptionMessage.closing}
+                <Image
+                  src="/assets/paw.svg"
+                  alt=""
+                  aria-hidden
+                  width={52}
+                  height={41}
+                  className="ml-1 inline-block h-[16px] w-auto translate-y-[2px]"
+                />
+              </p>
+            </div>
+          </div>
         </FadeInSection>
       </section>
 
       {/* 里親募集中のわんちゃん一覧 */}
       <section className="bg-blue pb-20 pt-12" aria-labelledby="rehoming-list">
         <div className="mx-auto flex max-w-[1024px] flex-col items-center gap-8 px-5 md:px-10">
-          <FadeInSection className="flex flex-col items-center">
+          <FadeInSection>
             <h2
               id="rehoming-list"
               className="font-jp text-[20px] font-extrabold leading-[1.6] text-ink-light md:text-[24px]"
             >
               里親募集中のわんちゃん
             </h2>
-            <p className="measure-560 mt-2 text-center font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
-              出産・子育てをがんばってくれた子たちです。
-              <br />
-              これからの犬生を、家族として穏やかに過ごさせていただける方をお待ちしています。
-            </p>
           </FadeInSection>
 
           <FadeInSection className="w-full">
@@ -62,7 +95,6 @@ export default async function AdoptionPage() {
                 現在、里親を募集しているわんちゃんはいません。次のご縁をお待ちください。
               </p>
             ) : (
-              // グリッドの列数も dog_breeder_ran に合わせる（2 → 3 → 4カラム）
               <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {dogs.map((dog) => (
                   <RehomingCard key={dog.id} dog={dog} />
