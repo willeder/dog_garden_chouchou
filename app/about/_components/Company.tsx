@@ -1,21 +1,21 @@
 import { kennelInfo } from "@/app/_data/kennelInfo";
 
-const orDash = (value?: string) => (value && value.trim() !== "" ? value : "―");
-
-/** 犬舎概要（ran の company 相当） */
+/** 犬舎概要（ran の company 相当）。未設定の項目は行ごと非表示にする */
 export const Company = () => {
   const fullAddress =
     kennelInfo.postalCode && kennelInfo.address
       ? `〒${kennelInfo.postalCode} ${kennelInfo.address}`
       : kennelInfo.address;
 
-  const rows: { label: string; value: string }[] = [
+  const rows = [
     { label: "犬舎名", value: kennelInfo.name },
-    { label: "設立年度", value: orDash(kennelInfo.establishedYear) },
-    { label: "所在地", value: orDash(fullAddress) },
+    { label: "事務所の名称", value: kennelInfo.animalBusiness.officeName },
+    { label: "設立年度", value: kennelInfo.establishedYear },
+    { label: "所在地", value: fullAddress },
     { label: "代表者", value: kennelInfo.breeder },
-    { label: "事業内容", value: orDash(kennelInfo.businessContent) },
-  ];
+    { label: "メールアドレス", value: kennelInfo.email },
+    { label: "事業内容", value: kennelInfo.businessContent },
+  ].filter((row) => row.value && row.value.trim() !== "");
 
   const accessRows = [
     { label: "最寄り駅", value: kennelInfo.access.station },

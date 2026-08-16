@@ -52,13 +52,15 @@ export type KennelInfo = {
 export const kennelInfo: KennelInfo = {
   name: "ドッグガーデンシュシュ",
   nameEn: "Dog Garden ChouChou",
-  breeder: "織方記美子",
+  breeder: "織方　記美子",
   breederKana: "おりかたきみこ",
   description:
     "ドッグガーデンシュシュでは、家庭的な環境で愛情を込めて子犬たちを育てています。お庭や室内を元気いっぱいに走り回れるよう環境を整え、健康管理や衛生面にも気を配りながら、安心して一緒に暮らせるよう心がけています。",
-  email: "",
+  email: "dog.g.chouchou@gmail.com",
+  // TODO: 郵便番号は支給資料に記載が無いため未設定（空なら住所のみ表示される）
   postalCode: "",
-  address: "",
+  address: "福岡県筑紫野市美しが丘南5-17-1",
+  // TODO: 設立年度は未確認（空なら犬舎概要の行自体が非表示になる）
   establishedYear: "",
   businessContent: "犬のブリーディング、販売、里親募集",
   access: {
@@ -76,13 +78,14 @@ export const kennelInfo: KennelInfo = {
       qrImage: "",
     },
   },
+  // 第一種動物取扱業の登録情報（みんなのブリーダー掲載の登録内容に準拠）
   animalBusiness: {
-    officeName: "",
+    officeName: "Dog Garden Chou chou",
     registrationType: "第一種動物取扱業登録",
     type: "販売",
-    registrationNumber: "",
-    registrationDate: "",
-    expirationDate: "",
-    animalHandler: "",
+    registrationNumber: "第4059100212号",
+    registrationDate: "2019年5月29日",
+    expirationDate: "2029年5月28日",
+    animalHandler: "織方　記美子",
   },
 };

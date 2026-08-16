@@ -29,7 +29,7 @@ export const kennelPoints: KennelPoint[] = [
   {
     icon: "/assets/about-icon-05-salon.svg",
     alt: "トリミング",
-    body: "提携のトリミングサロンで毎月シャンプーとカット。見た目だけでなく健康面も考えたケアを行っています。",
+    body: "トリマースタッフが在籍し、シャンプーやカットを日々管理。見た目だけでなく健康面も考えたケアを行っています。",
   },
   {
     icon: "/assets/about-icon-06-retriever.svg",

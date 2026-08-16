@@ -3,11 +3,11 @@ import SectionHeading from "@/app/_common/ui/SectionHeading";
 import FadeInSection from "@/app/_common/FadeInSection";
 import BackLink from "@/app/_layout/back";
 import { generateMetadata as buildMetadata } from "@/app/_config/metadata";
-import { kennelInfo } from "@/app/_data/kennelInfo";
 import PointCard from "./_components/PointCard";
 import Company from "./_components/Company";
 import Registration from "./_components/Registration";
 import StaffDay from "./_components/StaffDay";
+import BreederProfileCard from "./_components/BreederProfile";
 import { kennelPoints } from "./_components/data";
 
 export const metadata = buildMetadata(
@@ -68,35 +68,10 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ABOUTUS_3 */}
-      <section className="bg-blue py-12" aria-labelledby="breeder-name">
-        <FadeInSection className="mx-auto max-w-[1024px] px-5 md:px-[162px]">
-          <div className="measure-700 mx-auto rounded-[30px] bg-white px-6 py-10 shadow-pop md:px-[50px] md:py-12">
-            <div className="flex flex-col items-center gap-4 md:flex-row md:items-end md:gap-2">
-              <Image
-                src="/assets/about-breeder-avatar.svg"
-                alt=""
-                aria-hidden
-                width={142}
-                height={142}
-                className="h-[142px] w-[142px] shrink-0 rounded-full"
-              />
-              <div className="flex flex-col items-start gap-1">
-                <p
-                  id="breeder-name"
-                  className="font-jp text-[16px] font-extrabold leading-[1.6] text-ink-light md:text-[18px]"
-                >
-                  {kennelInfo.breeder}ブリーダー({kennelInfo.breederKana})
-                </p>
-                <p className="font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
-                  もともと自宅でわんちゃんと暮らしていたのですが、お別れをきっかけにペットロスになってしまいました。
-                  そんな中で、知り合いのブリーダーさんからの「少しの間預かってみない？」というひと言が新しい一歩に。
-                  一緒に過ごすうちに、わんちゃんたちを大切に育て、素敵なご家族に迎えていただく喜びを知りました。
-                  今では、自分の子どものように愛情を注ぎながら、幸せなご縁をつなぐブリーディングに取り組んでいます。
-                </p>
-              </div>
-            </div>
-          </div>
+      {/* ABOUTUS_3: ブリーダー紹介 */}
+      <section className="bg-blue py-12">
+        <FadeInSection className="mx-auto flex max-w-[1024px] justify-center px-5 md:px-[162px]">
+          <BreederProfileCard />
         </FadeInSection>
       </section>
 
