@@ -1,5 +1,6 @@
 import Image from "next/image";
-import Button from "@/app/_common/ui/Button";
+import TrackedButton from "@/app/_common/ui/TrackedButton";
+import TrackedLink from "@/app/_common/ui/TrackedLink";
 import FadeInSection from "@/app/_common/FadeInSection";
 import { kennelInfo } from "@/app/_data/kennelInfo";
 
@@ -19,6 +20,9 @@ const posts = [
 export const InstagramSection = () => {
   const instagramUrl = kennelInfo.sns.instagram;
 
+  // InstagramのURLが未設定なら、このセクション自体を出さない
+  if (!instagramUrl) return null;
+
   return (
     <section className="paw-pattern bg-pink py-12" aria-labelledby="top-instagram-title">
       <FadeInSection className="mx-auto flex max-w-[1024px] flex-col items-center gap-6 px-5 md:px-[142px]">
@@ -37,12 +41,13 @@ export const InstagramSection = () => {
         <ul className="flex flex-wrap items-start justify-center gap-8">
           {posts.map((post, index) => (
             <li key={post.src} className={index === 2 ? "hidden lg:block" : ""}>
-              <a
+              <TrackedLink
                 href={instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                kind="social"
+                network="instagram"
+                location="top_instagram_card"
                 aria-label="Instagramで最新の投稿を見る"
-                className="relative block h-[274px] w-[225px] bg-white shadow-pop transition-transform duration-300 hover:-translate-y-1"
+                className="relative block h-[274px] w-[225px] bg-white shadow-pop transition-[translate] duration-300 hover:-translate-y-1"
               >
                 <Image
                   src="/assets/top-insta-card-header.svg"
@@ -67,15 +72,22 @@ export const InstagramSection = () => {
                   height={14}
                   className="absolute left-[14px] top-[250px]"
                 />
-              </a>
+              </TrackedLink>
             </li>
           ))}
         </ul>
 
         {instagramUrl && (
-          <Button href={instagramUrl} variant="greenDark" font="jp">
+          <TrackedButton
+            href={instagramUrl}
+            kind="social"
+            network="instagram"
+            location="top_instagram_section"
+            variant="greenDark"
+            font="jp"
+          >
             Instagramで最新の投稿を見る
-          </Button>
+          </TrackedButton>
         )}
       </FadeInSection>
     </section>

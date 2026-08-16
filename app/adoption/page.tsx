@@ -94,7 +94,7 @@ export default function AdoptionPage() {
           </FadeInSection>
 
           <FadeInSection className="flex w-full justify-center">
-            <LineGuide />
+            <LineGuide location="adoption_page" />
           </FadeInSection>
         </div>
       </section>

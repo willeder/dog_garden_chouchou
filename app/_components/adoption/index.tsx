@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Button from "@/app/_common/ui/Button";
+import TrackedButton from "@/app/_common/ui/TrackedButton";
 import FadeInSection from "@/app/_common/FadeInSection";
 import { adoptionMessage } from "@/app/_data/adoptionMessage";
 
@@ -38,9 +38,9 @@ export const AdoptionSection = () => (
             ))}
           </div>
         </div>
-        <Button href="/adoption" variant="green">
+        <TrackedButton href="/adoption" kind="cta" location="top_adoption" label="READ MORE" variant="green">
           READ MORE
-        </Button>
+        </TrackedButton>
       </div>
     </FadeInSection>
   </section>

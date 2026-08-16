@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import type { Faq } from "@/app/_model/faq";
 import AnswerBlocks from "./AnswerBlocks";
+import { trackFaqOpen } from "@/app/_lib/analytics";
 
 /**
  * Figma: Q＆A_1 のアコーディオン
@@ -17,7 +18,13 @@ export const AccordionItem = ({ faq, defaultOpen = false }: { faq: Faq; defaultO
       <h3>
         <button
           type="button"
-          onClick={() => setIsOpen((current) => !current)}
+          onClick={() =>
+            setIsOpen((current) => {
+              // 開いたときだけ計測する（閉じる操作は送らない）
+              if (!current) trackFaqOpen(faq.question);
+              return !current;
+            })
+          }
           aria-expanded={isOpen}
           className={`flex w-full cursor-pointer items-center justify-between gap-6 bg-yellow-light px-6 py-[23px] text-left md:px-[34px] ${
             isOpen ? "rounded-t-[10px]" : "rounded-[10px]"

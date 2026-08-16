@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import Button from "@/app/_common/ui/Button";
+import TrackedButton from "@/app/_common/ui/TrackedButton";
 import FadeInSection from "@/app/_common/FadeInSection";
 
 const links = [
@@ -59,9 +59,9 @@ export const LinksSection = () => (
           height={130}
           className="h-auto w-[130px]"
         />
-        <Button href="/visit" variant="green" font="jp" className="px-10 py-4 text-[16px]">
+        <TrackedButton href="/visit" kind="cta" location="top_links" label="見学のお申し込みはこちらから" variant="green" font="jp" className="px-10 py-4 text-[16px]">
           見学のお申し込みはこちらから
-        </Button>
+        </TrackedButton>
       </FadeInSection>
     </div>
   </section>

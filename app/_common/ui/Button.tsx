@@ -46,15 +46,22 @@ export const Button = ({
 
   if (href && !disabled) {
     // 外部リンクは新しいタブで開く（dog_breeder_ran の Button と同じ挙動）
+    // onClick はGA4のクリック計測に使う（TrackedButton から渡される）
     if (href.startsWith("http")) {
       return (
-        <a href={href} target="_blank" rel="noopener noreferrer" className={base}>
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={base}
+          onClick={onClick}
+        >
           {children}
         </a>
       );
     }
     return (
-      <Link href={href} className={base}>
+      <Link href={href} className={base} onClick={onClick}>
         {children}
       </Link>
     );

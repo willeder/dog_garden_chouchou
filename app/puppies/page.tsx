@@ -37,7 +37,7 @@ export default async function PuppiesPage() {
         </div>
       </section>
 
-      <ContactSection />
+      <ContactSection location="puppy_list_bottom" />
       <BackLink />
     </>
   );

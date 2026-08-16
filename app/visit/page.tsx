@@ -50,7 +50,7 @@ export default function VisitPage() {
 
       {/* 見学のお申し込みは公式LINE */}
       <div className="bg-blue pt-8" />
-      <ContactSection />
+      <ContactSection location="visit_page" />
 
       <BackLink />
     </>

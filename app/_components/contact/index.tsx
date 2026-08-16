@@ -10,9 +10,14 @@ import LineGuide from "@/app/_common/LineGuide";
 type ContactSectionProps = {
   /** お問い合わせページではこのセクションがページの主題になるため "h1" を渡す */
   headingLevel?: "h1" | "h2";
+  /** GA4のクリック計測用。どのページに置かれたセクションかを識別する */
+  location?: string;
 };
 
-export const ContactSection = ({ headingLevel = "h2" }: ContactSectionProps) => (
+export const ContactSection = ({
+  headingLevel = "h2",
+  location = "contact_section",
+}: ContactSectionProps) => (
   <section className="relative overflow-hidden bg-blue py-20" aria-labelledby="contact-title">
     {/* 装飾の雲 */}
     <div className="pointer-events-none absolute inset-0 hidden lg:block" aria-hidden>
@@ -48,7 +53,7 @@ export const ContactSection = ({ headingLevel = "h2" }: ContactSectionProps) => 
       </FadeInSection>
 
       <FadeInSection className="flex w-full justify-center">
-        <LineGuide />
+        <LineGuide location={location} />
       </FadeInSection>
     </div>
   </section>

@@ -1,7 +1,7 @@
 import SectionHeading from "@/app/_common/ui/SectionHeading";
 import CloudDecoration from "@/app/_common/ui/CloudDecoration";
 import FadeInSection from "@/app/_common/FadeInSection";
-import Button from "@/app/_common/ui/Button";
+import TrackedButton from "@/app/_common/ui/TrackedButton";
 import BackLink from "@/app/_layout/back";
 import { warrantyItems } from "@/app/_data/warrantyData";
 import { generateMetadata as buildMetadata } from "@/app/_config/metadata";
@@ -48,9 +48,9 @@ export default function WarrantyPage() {
               <p className="font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
                 詳細については、お気軽に公式LINEよりお問い合わせください。
               </p>
-              <Button href="/contact" variant="green" font="jp">
+              <TrackedButton href="/contact" kind="cta" location="warranty_page" label="お問い合わせはこちら" variant="green" font="jp">
                 お問い合わせはこちら
-              </Button>
+              </TrackedButton>
             </div>
           </FadeInSection>
         </div>

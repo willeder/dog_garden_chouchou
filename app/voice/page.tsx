@@ -39,6 +39,14 @@ export default async function VoicePage() {
       {/* THANKYOU_2 */}
       <section className="bg-blue pb-12 pt-8">
         <div className="mx-auto flex max-w-[1024px] flex-col items-center gap-8 px-5 md:px-[162px]">
+          {voices.length === 0 && (
+            <p className="py-8 text-center font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
+              現在ご紹介できるお客様の声はありません。
+              <br className="md:hidden" />
+              準備ができ次第、こちらに掲載いたします。
+            </p>
+          )}
+
           {voices.map((voice) => (
             <FadeInSection key={voice.id} className="w-full">
               <article className="measure-700 mx-auto rounded-[30px] bg-white px-6 py-10 shadow-pop md:px-[50px] md:py-12">

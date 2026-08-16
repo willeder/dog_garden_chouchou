@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { trackPagination } from "@/app/_lib/analytics";
 
 type PaginationProps = {
   currentPage: number;
@@ -16,6 +17,7 @@ export const Pagination = ({ currentPage, totalPages, onChange }: PaginationProp
 
   const move = (page: number) => {
     onChange(page);
+    trackPagination(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 

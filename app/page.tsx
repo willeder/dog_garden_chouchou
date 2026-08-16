@@ -32,7 +32,7 @@ export default function Home() {
       <LinksSection />
 
       {/* CONTACT US（お問い合わせ） */}
-      <ContactSection />
+      <ContactSection location="top_contact" />
 
       {/* SNS（Instagram） */}
       <InstagramSection />

@@ -131,7 +131,9 @@ export const puppyJsonLd = (puppy: Puppy) => {
           ]
         : []),
     ],
-    ...(puppy.price
+    // 成約済みの子は画面上も価格を出さないため、構造化データからも offers ごと省く
+    // （表示と構造化データが食い違うとGoogleのスパムポリシー違反になり得る）
+    ...(puppy.price && puppy.status !== "成約済み"
       ? {
           offers: {
             "@type": "Offer",

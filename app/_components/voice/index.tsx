@@ -7,6 +7,9 @@ import VoiceCarousel from "./VoiceCarousel";
 export const VoiceSection = async () => {
   const voices = await getVoices();
 
+  // お客様の声が1件も無いときは、見出しだけが残らないようセクションごと出さない
+  if (voices.length === 0) return null;
+
   return (
     <section className="bg-beige pb-20" aria-labelledby="top-voice-title">
       <div className="mx-auto flex max-w-[1024px] flex-col items-center gap-8 px-5 md:px-[74px]">

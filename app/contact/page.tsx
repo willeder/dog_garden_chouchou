@@ -15,7 +15,7 @@ export default function ContactPage() {
     <>
       <JsonLd data={breadcrumbJsonLd([{ name: "お問い合わせ", path: "/contact" }])} />
 
-      <ContactSection headingLevel="h1" />
+      <ContactSection headingLevel="h1" location="contact_page" />
       <BackLink />
     </>
   );

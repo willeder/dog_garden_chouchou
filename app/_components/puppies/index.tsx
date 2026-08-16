@@ -1,6 +1,6 @@
 import Image from "next/image";
 import SectionHeading from "@/app/_common/ui/SectionHeading";
-import Button from "@/app/_common/ui/Button";
+import TrackedButton from "@/app/_common/ui/TrackedButton";
 import FadeInSection from "@/app/_common/FadeInSection";
 import { getPuppies } from "@/app/_api/puppies/get";
 import { breeds } from "@/app/_model/breed";
@@ -62,9 +62,9 @@ export const PuppiesSection = async () => {
             </li>
           </ul>
 
-          <Button href="/puppies" variant="greenDark">
+          <TrackedButton href="/puppies" kind="cta" location="top_puppies" label="READ MORE" variant="greenDark">
             READ MORE
-          </Button>
+          </TrackedButton>
         </FadeInSection>
       </div>
     </section>

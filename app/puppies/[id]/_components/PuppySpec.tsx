@@ -14,8 +14,15 @@ export const PuppySpec = ({ puppy }: { puppy: Puppy }) => {
     { label: "誕生日", value: formatBirthdayWithSuffix(puppy.birthday) },
     { label: "生後", value: formatAge(puppy.birthday) },
     { label: "毛色", value: puppy.color },
-    { label: "価格", value: puppy.price != null ? `${formatPrice(puppy.price)}(税込)` : "応相談" },
   ];
+
+  // 成約済みの子は価格の行そのものを出さない
+  if (puppy.status !== "成約済み") {
+    rows.push({
+      label: "価格",
+      value: puppy.price != null ? `${formatPrice(puppy.price)}(税込)` : "応相談",
+    });
+  }
 
   if (puppy.expectedWeight != null) {
     rows.push({ label: "予想体重", value: `${puppy.expectedWeight}kg以下` });

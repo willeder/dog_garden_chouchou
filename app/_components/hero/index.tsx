@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Button from "@/app/_common/ui/Button";
+import TrackedButton from "@/app/_common/ui/TrackedButton";
 import SectionHeading from "@/app/_common/ui/SectionHeading";
 import FadeInSection from "@/app/_common/FadeInSection";
 import HeroSlideshow from "./HeroSlideshow";
@@ -50,9 +50,9 @@ export const HeroSection = () => (
           <p className="measure-560 font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
             ドッグガーデンシュシュでは、家庭的な環境で愛情を込めて子犬たちを育てています。お庭や室内を元気いっぱいに走り回れるよう環境を整え、健康管理や衛生面にも気を配りながら、安心して一緒に暮らせるよう心がけています。家族の一員として、たくさんの愛情に包まれて過ごせる未来を願い、ひとりひとり大切に育てています。
           </p>
-          <Button href="/about" variant="greenDark">
+          <TrackedButton href="/about" kind="cta" location="top_about" label="READ MORE" variant="greenDark">
             READ MORE
-          </Button>
+          </TrackedButton>
         </div>
       </FadeInSection>
 

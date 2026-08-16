@@ -19,7 +19,8 @@ export const PuppyCard = ({ puppy }: { puppy: Puppy }) => {
     { label: "生後", value: formatAge(puppy.birthday) },
     { label: "毛色", value: puppy.color },
   ];
-  if (puppy.price != null) {
+  // 成約済みの子は価格を表示しない
+  if (puppy.status !== "成約済み" && puppy.price != null) {
     rows.push({ label: "価格", value: `${formatPrice(puppy.price)}(税込)`, accent: true });
   }
 

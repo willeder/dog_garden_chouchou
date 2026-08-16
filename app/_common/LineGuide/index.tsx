@@ -1,13 +1,18 @@
 import Image from "next/image";
 import Icon from "@/app/_common/ui/Icon";
-import Button from "@/app/_common/ui/Button";
+import TrackedButton from "@/app/_common/ui/TrackedButton";
 import { kennelInfo } from "@/app/_data/kennelInfo";
 
 /**
  * お問い合わせ導線（公式LINE）。
  * Figma CONTACT US の白カード（700px / radius 30 / shadow 5px 5px 0）の中身として使用する。
  */
-export const LineGuide = () => {
+type LineGuideProps = {
+  /** GA4のクリック計測用。どのページに置かれた導線かを識別する */
+  location?: string;
+};
+
+export const LineGuide = ({ location = "line_guide" }: LineGuideProps) => {
   const { line } = kennelInfo.sns;
 
   return (
@@ -38,9 +43,9 @@ export const LineGuide = () => {
           </p>
           <div className="mt-4 flex flex-col items-start gap-2">
             {line?.url ? (
-              <Button href={line.url} variant="green" font="jp">
+              <TrackedButton href={line.url} kind="line" location={location} variant="green" font="jp">
                 LINEで友だち追加する
-              </Button>
+              </TrackedButton>
             ) : (
               // TODO: kennelInfo.sns.line.url に公式LINEのURLを設定すると友だち追加ボタンが表示されます
               <p className="font-jp text-[14px] leading-[1.6] text-ink-light">
@@ -83,9 +88,16 @@ export const LineGuide = () => {
         <p className="font-jp text-[14px] leading-[1.6] text-ink-light">
           お問い合わせの前に、よくある質問もご確認ください。
         </p>
-        <Button href="/faq" variant="pink" font="jp">
+        <TrackedButton
+          href="/faq"
+          kind="cta"
+          location={`${location}_faq`}
+          label="よくある質問を見る"
+          variant="pink"
+          font="jp"
+        >
           よくある質問を見る
-        </Button>
+        </TrackedButton>
       </div>
     </div>
   );

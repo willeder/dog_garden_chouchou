@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import SectionHeading from "@/app/_common/ui/SectionHeading";
 import FadeInSection from "@/app/_common/FadeInSection";
 import PhotoGallery from "@/app/_common/PhotoGallery";
-import Button from "@/app/_common/ui/Button";
+import TrackedButton from "@/app/_common/ui/TrackedButton";
 import BackLink from "@/app/_layout/back";
 import { ContactSection } from "@/app/_components/contact";
 import { getPuppies, getPuppy } from "@/app/_api/puppies/get";
@@ -13,6 +13,7 @@ import { formatBirthday } from "@/app/_lib/date";
 import PuppySpec from "./_components/PuppySpec";
 import BreederMessage from "./_components/BreederMessage";
 import Parents from "./_components/Parents";
+import PuppyViewTracker from "./_components/PuppyViewTracker";
 
 // ISR: 1時間ごとに再生成（app/_config/isr.ts の defaultRevalidateTime と同値）
 export const revalidate = 3600;
@@ -53,6 +54,7 @@ export default async function PuppyDetailPage({ params }: PageProps) {
           ]),
         ]}
       />
+      <PuppyViewTracker puppy={puppy} />
 
       {/* 写真 */}
       <section className="bg-beige pb-6 pt-8">
@@ -81,9 +83,9 @@ export default async function PuppyDetailPage({ params }: PageProps) {
           <p className="text-center font-jp text-[14px] leading-[1.6] text-ink-light md:text-[16px]">
             この子の見学・ご相談は公式LINEにて承っております。
           </p>
-          <Button href="/contact" variant="green" font="jp">
+          <TrackedButton href="/contact" kind="cta" location="puppy_detail" label="LINEで見学・お問い合わせ" variant="green" font="jp">
             LINEで見学・お問い合わせ
-          </Button>
+          </TrackedButton>
         </FadeInSection>
       </section>
 
@@ -101,7 +103,7 @@ export default async function PuppyDetailPage({ params }: PageProps) {
         </FadeInSection>
       </section>
 
-      <ContactSection />
+      <ContactSection location="puppy_detail_bottom" />
       <BackLink href="/puppies" />
     </>
   );
