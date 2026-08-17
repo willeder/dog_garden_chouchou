@@ -4,10 +4,12 @@ import { createClient } from '@/app/_lib/supabase/server';
 import { ymd, ym, chip, ageLabel, todayJst } from '@/app/_lib/admFormat';
 import type { DogDetail, LitterRow, VaccinationRow, VaccineDueRow } from '@/app/_model/admin';
 import { BreedChip, ColorDot } from '@/app/(admin)/_components/Marks';
+import { PhotoManager, type PhotoItem } from './PhotoManager';
+import { PRIVATE_BUCKET, PUBLIC_BUCKET, publicPhotoUrl } from '@/app/_lib/supabase/storage';
 
 export const dynamic = 'force-dynamic';
 
-const TABS = ['基本', '出産', '血統', 'ワクチン'] as const;
+const TABS = ['基本', '写真', '出産', '血統', 'ワクチン'] as const;
 type Tab = (typeof TABS)[number];
 
 type Props = {
@@ -41,7 +43,7 @@ export default async function DogPage({ params, searchParams }: Props) {
   if (!dogRaw) notFound();
   const dog = dogRaw as unknown as DogDetail;
 
-  const [{ data: littersRaw }, { data: vaccRaw }, { data: dueRaw }] = await Promise.all([
+  const [{ data: littersRaw }, { data: vaccRaw }, { data: dueRaw }, { data: photoRaw }] = await Promise.all([
     supabase
       .from('v_litters')
       .select('id, birth_date, sire_id, sire_name, gestation_days, method, male_count, female_count, stillborn_count, note, checkup_date, is_mix')
@@ -54,11 +56,37 @@ export default async function DogPage({ params, searchParams }: Props) {
       .eq('dog_id', id)
       .order('dosed_on', { ascending: false }),
     supabase.from('v_vaccine_due').select('kind, last_dosed_on, next_due_on').eq('dog_id', id),
+    supabase
+      .from('dog_photos')
+      .select('id, bucket, path, width, height, sort_order')
+      .eq('dog_id', id)
+      .order('sort_order')
+      .order('created_at'),
   ]);
 
   const litters = (littersRaw ?? []) as LitterRow[];
   const vaccinations = (vaccRaw ?? []) as VaccinationRow[];
   const due = (dueRaw ?? []) as VaccineDueRow[];
+
+  type PhotoRow = Omit<PhotoItem, 'url'>;
+  const photoRows = (photoRaw ?? []) as PhotoRow[];
+  const publicPhotos: PhotoItem[] = photoRows
+    .filter((p) => p.bucket === PUBLIC_BUCKET)
+    .map((p) => ({ ...p, url: publicPhotoUrl(p.path) }));
+
+  // 非公開バケットは公開URLが無いので、表示用に短命の署名URLを作る
+  const privateRows = photoRows.filter((p) => p.bucket === PRIVATE_BUCKET);
+  const signed = privateRows.length
+    ? await supabase.storage
+        .from(PRIVATE_BUCKET)
+        .createSignedUrls(privateRows.map((p) => p.path), 60 * 30)
+    : { data: [] as { signedUrl: string }[] };
+  const privatePhotos: PhotoItem[] = privateRows.map((p, i) => ({
+    ...p,
+    url: signed.data?.[i]?.signedUrl ?? '',
+  }));
+
+  const mainPhoto = publicPhotos[0] ?? privatePhotos[0];
 
   const totalPups = litters.reduce((n, l) => n + l.male_count + l.female_count, 0);
   const nextMating = litters[0]
@@ -80,12 +108,21 @@ export default async function DogPage({ params, searchParams }: Props) {
 
       <div className="border-b border-adm-rule bg-adm-surface px-4 pt-3.5">
         <div className="flex items-start gap-3">
-          <ColorDot
-            hex={dog.coat_colors?.hex}
-            hex2={dog.coat_colors?.hex2}
-            label={dog.coat_colors?.name}
-            size={56}
-          />
+          {mainPhoto ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={mainPhoto.url}
+              alt={`${dog.name} の写真`}
+              className="h-14 w-14 shrink-0 rounded-full border border-adm-rule bg-adm-paper object-cover"
+            />
+          ) : (
+            <ColorDot
+              hex={dog.coat_colors?.hex}
+              hex2={dog.coat_colors?.hex2}
+              label={dog.coat_colors?.name}
+              size={56}
+            />
+          )}
           <div className="min-w-0 flex-1">
             <p className="text-[21px] font-bold leading-tight">{dog.name}</p>
             <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-adm-muted">
@@ -105,7 +142,7 @@ export default async function DogPage({ params, searchParams }: Props) {
           <Stat v={nextMating ? ym(nextMating).replace(/^\d+年/, '') : '—'} k="交配可" />
         </dl>
 
-        <nav className="grid grid-cols-4 border-t border-adm-rule">
+        <nav className="grid grid-cols-5 border-t border-adm-rule">
           {TABS.map((t) => (
             <Link
               key={t}
@@ -122,6 +159,14 @@ export default async function DogPage({ params, searchParams }: Props) {
       </div>
 
       {tab === '基本' && <BasicTab dog={dog} />}
+      {tab === '写真' && (
+        <PhotoManager
+          dogId={dog.id}
+          dogName={dog.name}
+          publicPhotos={publicPhotos}
+          privatePhotos={privatePhotos}
+        />
+      )}
       {tab === '出産' && <LittersTab litters={litters} sex={dog.sex} />}
       {tab === '血統' && <PedigreeTab dog={dog} />}
       {tab === 'ワクチン' && <VaccineTab rows={vaccinations} due={due} />}

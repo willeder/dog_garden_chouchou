@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/app/_lib/supabase/client';
 import { isSupabaseConfigured } from '@/app/_lib/supabase/config';
 
@@ -8,6 +8,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  // /auth/callback から失敗して戻ってきたとき、原因を出す。
+  // 黙って入力画面に戻すと「押したのに入れない」だけが残る。
+  //
+  // useSearchParams() ではなく window から読む。
+  // useSearchParams() を使うとこのページが静的生成できなくなり、
+  // Suspense で包む必要が出て、ログイン画面が一瞬空になる。
+  useEffect(() => {
+    const err = new URLSearchParams(window.location.search).get('error');
+    if (!err) return;
+    setState('error');
+    setMessage(
+      err === 'exchange'
+        ? 'ログインリンクが使えませんでした。有効期限が切れているか、すでに一度使われています。もう一度送ってください。'
+        : 'ログインを完了できませんでした。もう一度送ってください。',
+    );
+  }, []);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();

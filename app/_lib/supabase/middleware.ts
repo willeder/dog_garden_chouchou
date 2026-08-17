@@ -19,6 +19,16 @@ export async function updateSession(request: NextRequest) {
   // 何を設定すればよいかを表示する。
   if (!isSupabaseConfigured) return NextResponse.next({ request });
 
+  // ログインリンクがトップに落ちてきた場合の受け皿。
+  // Supabase の Redirect URLs に /auth/callback が未登録だと、
+  // 飛び先が Site URL（トップ）になり ?code= だけが付いて来る。
+  const incomingCode = request.nextUrl.searchParams.get("code");
+  if (incomingCode && request.nextUrl.pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

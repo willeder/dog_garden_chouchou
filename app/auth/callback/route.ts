@@ -6,7 +6,11 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
   const next = searchParams.get('next') ?? '/admin';
 
-  if (code) {
+  if (!code) {
+    return NextResponse.redirect(`${origin}/login?error=nocode`);
+  }
+
+  {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
@@ -16,5 +20,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/login?error=1`);
+  // よくある原因は「リンクの有効期限切れ」と「一度使ったリンクの再利用」。
+  // 理由を渡してログイン画面で説明する。
+  return NextResponse.redirect(`${origin}/login?error=exchange`);
 }

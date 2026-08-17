@@ -3,6 +3,7 @@ import { createClient } from '@/app/_lib/supabase/server';
 import { ymd } from '@/app/_lib/admFormat';
 import type { Breed, DogListRow, DogListItem, DogStatus } from '@/app/_model/admin';
 import { BreedBar, ColorDot } from '@/app/(admin)/_components/Marks';
+import { PUBLIC_BUCKET, publicPhotoUrl } from '@/app/_lib/supabase/storage';
 import { SearchBox } from './SearchBox';
 
 export const dynamic = 'force-dynamic';
@@ -48,11 +49,19 @@ export default async function DogsPage({ searchParams }: Props) {
     query = query.or(conds.join(','));
   }
 
-  const [{ data: dogsRaw, error }, { data: breedsRaw }, { data: summaryRaw }] = await Promise.all([
-    query.order('name'),
-    supabase.from('breeds').select('code, name, hex').order('code'),
-    supabase.from('v_dam_summary').select('dog_id, litter_count, last_birth_date, next_mating_month'),
-  ]);
+  const [{ data: dogsRaw, error }, { data: breedsRaw }, { data: summaryRaw }, { data: photoRaw }] =
+    await Promise.all([
+      query.order('name'),
+      supabase.from('breeds').select('code, name, hex').order('code'),
+      supabase.from('v_dam_summary').select('dog_id, litter_count, last_birth_date, next_mating_month'),
+      // 一覧のサムネイル。公開バケットのものだけ使う。
+      // 非公開は署名URLが必要で、一覧で何十件も署名すると重くなる。
+      supabase
+        .from('dog_photos')
+        .select('dog_id, path, sort_order')
+        .eq('bucket', PUBLIC_BUCKET)
+        .order('sort_order'),
+    ]);
 
   const dogs = (dogsRaw ?? []) as unknown as DogListRow[];
   const breeds = (breedsRaw ?? []) as Breed[];
@@ -65,6 +74,12 @@ export default async function DogsPage({ searchParams }: Props) {
   const summary = new Map<string, Summary>(
     ((summaryRaw ?? []) as unknown as Summary[]).map((s) => [s.dog_id, s]),
   );
+
+  // 犬ごとの1枚目だけ拾う
+  const thumb = new Map<string, string>();
+  for (const p of (photoRaw ?? []) as { dog_id: string; path: string }[]) {
+    if (!thumb.has(p.dog_id)) thumb.set(p.dog_id, publicPhotoUrl(p.path));
+  }
 
   const items: DogListItem[] = dogs.map((d) => {
     const s = summary.get(d.id);
@@ -128,7 +143,22 @@ export default async function DogsPage({ searchParams }: Props) {
                   className="tap flex items-center gap-3 px-3.5 py-2.5 active:bg-adm-paper"
                 >
                   <BreedBar hex={d.breeds?.hex} label={d.breeds?.name} />
-                  <ColorDot hex={d.coat_colors?.hex} hex2={d.coat_colors?.hex2} label={d.coat_colors?.name} />
+                  {thumb.has(d.id) ? (
+                    // 写真が入っている犬は顔を出す。台帳が「うちの子たちの一覧」に見える。
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={thumb.get(d.id)}
+                      alt=""
+                      className="h-[38px] w-[38px] shrink-0 rounded-full border border-adm-rule bg-adm-paper object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <ColorDot
+                      hex={d.coat_colors?.hex}
+                      hex2={d.coat_colors?.hex2}
+                      label={d.coat_colors?.name}
+                    />
+                  )}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px] font-medium">
                       {d.name}
