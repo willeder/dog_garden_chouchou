@@ -1,0 +1,439 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { createClient } from '@/app/_lib/supabase/server';
+import { ymd, ym, chip, ageLabel, todayJst } from '@/app/_lib/admFormat';
+import type { DogDetail, LitterRow, VaccinationRow, VaccineDueRow } from '@/app/_model/admin';
+import { BreedChip, ColorDot } from '@/app/(admin)/_components/Marks';
+
+export const dynamic = 'force-dynamic';
+
+const TABS = ['基本', '出産', '血統', 'ワクチン'] as const;
+type Tab = (typeof TABS)[number];
+
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ t?: string }>;
+};
+
+export default async function DogPage({ params, searchParams }: Props) {
+  const { id } = await params;
+  const sp = await searchParams;
+  const tab: Tab = (TABS as readonly string[]).includes(sp.t ?? '') ? (sp.t as Tab) : '基本';
+
+  const supabase = await createClient();
+
+  const { data: dogRaw } = await supabase
+    .from('dogs')
+    .select(
+      `id, name, sex, breed_code, birthday, weight_kg, microchip, color, color_code,
+       coat_type_code, status, is_external, genes, breeder_note, is_self_bred,
+       acquired_on, died_on, note, sire_id, dam_id,
+       breeds ( code, name, hex ),
+       coat_colors ( code, name, hex, hex2 ),
+       coat_types ( code, name ),
+       breeder:partners!dogs_breeder_id_fkey ( name, contact_name, license_no ),
+       supplier:partners!dogs_supplier_id_fkey ( name, contact_name, license_no )`,
+    )
+    .eq('id', id)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (!dogRaw) notFound();
+  const dog = dogRaw as unknown as DogDetail;
+
+  const [{ data: littersRaw }, { data: vaccRaw }, { data: dueRaw }] = await Promise.all([
+    supabase
+      .from('v_litters')
+      .select('id, birth_date, sire_id, sire_name, gestation_days, method, male_count, female_count, stillborn_count, note, checkup_date, is_mix')
+      .eq('dam_id', id)
+      .is('deleted_at', null)
+      .order('birth_date', { ascending: false }),
+    supabase
+      .from('vaccinations')
+      .select('id, kind, dosed_on, note')
+      .eq('dog_id', id)
+      .order('dosed_on', { ascending: false }),
+    supabase.from('v_vaccine_due').select('kind, last_dosed_on, next_due_on').eq('dog_id', id),
+  ]);
+
+  const litters = (littersRaw ?? []) as LitterRow[];
+  const vaccinations = (vaccRaw ?? []) as VaccinationRow[];
+  const due = (dueRaw ?? []) as VaccineDueRow[];
+
+  const totalPups = litters.reduce((n, l) => n + l.male_count + l.female_count, 0);
+  const nextMating = litters[0]
+    ? shiftMonthIso(litters[0].birth_date, 5)
+    : null;
+
+  return (
+    <>
+      <header className="sticky top-0 z-20 flex items-center gap-2.5 border-b border-adm-rule bg-adm-surface px-3 pb-2.5 pt-3">
+        <Link
+          href="/admin/dogs"
+          aria-label="犬一覧へ戻る"
+          className="tap flex w-[38px] items-center justify-center rounded-lg border border-adm-rule text-[15px] text-adm-muted"
+        >
+          ‹
+        </Link>
+        <h1 className="truncate text-[17px] font-bold tracking-tight">{dog.name}</h1>
+      </header>
+
+      <div className="border-b border-adm-rule bg-adm-surface px-4 pt-3.5">
+        <div className="flex items-start gap-3">
+          <ColorDot
+            hex={dog.coat_colors?.hex}
+            hex2={dog.coat_colors?.hex2}
+            label={dog.coat_colors?.name}
+            size={56}
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-[21px] font-bold leading-tight">{dog.name}</p>
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-adm-muted">
+              <BreedChip code={dog.breed_code} hex={dog.breeds?.hex} />
+              <span>{dog.breeds?.name} {dog.sex}</span>
+              <span className="num">{ymd(dog.birthday)}</span>
+              <span>{ageLabel(dog.birthday, todayJst())}</span>
+            </p>
+            <p className="num mt-1 text-[12px] text-adm-muted">{chip(dog.microchip)}</p>
+          </div>
+        </div>
+
+        <dl className="mt-3.5 flex border-t border-adm-rule">
+          <Stat v={dog.sex === '♀' ? String(litters.length) : '—'} k="出産" />
+          <Stat v={dog.sex === '♀' ? String(totalPups) : '—'} k="産子" />
+          <Stat v={dog.weight_kg ? String(dog.weight_kg) : '—'} k="体重kg" />
+          <Stat v={nextMating ? ym(nextMating).replace(/^\d+年/, '') : '—'} k="交配可" />
+        </dl>
+
+        <nav className="grid grid-cols-4 border-t border-adm-rule">
+          {TABS.map((t) => (
+            <Link
+              key={t}
+              href={`/admin/dogs/${id}?t=${encodeURIComponent(t)}`}
+              scroll={false}
+              className={`tap flex items-center justify-center border-b-2 pb-2 pt-2.5 text-[13px] ${
+                t === tab ? 'border-adm-action font-bold text-adm-action' : 'border-transparent text-adm-muted'
+              }`}
+            >
+              {t}
+            </Link>
+          ))}
+        </nav>
+      </div>
+
+      {tab === '基本' && <BasicTab dog={dog} />}
+      {tab === '出産' && <LittersTab litters={litters} sex={dog.sex} />}
+      {tab === '血統' && <PedigreeTab dog={dog} />}
+      {tab === 'ワクチン' && <VaccineTab rows={vaccinations} due={due} />}
+
+      <div className="h-6" />
+    </>
+  );
+}
+
+function Stat({ v, k }: { v: string; k: string }) {
+  return (
+    <div className="flex-1 border-r border-adm-rule px-1 py-2.5 text-center last:border-r-0">
+      <dd className="num text-[17px] font-bold leading-tight">{v}</dd>
+      <dt className="mt-0.5 text-[10.5px] text-adm-muted">{k}</dt>
+    </div>
+  );
+}
+
+/* ───────── 基本 ───────── */
+
+function BasicTab({ dog }: { dog: DogDetail }) {
+  const coat = dog.coat_types?.name;
+  const colorLabel = dog.coat_colors?.name
+    ? `${dog.coat_colors.name}${coat ? `・${coat}` : ''}`
+    : dog.color || '未登録';
+
+  return (
+    <>
+      <Section title="基本">
+        <Dl
+          rows={[
+            ['犬種', dog.breeds?.name ?? dog.breed_code, 'ja'],
+            ['性別', dog.sex, 'num'],
+            ['誕生日', ymd(dog.birthday), 'num'],
+            ['体重', dog.weight_kg ? `${dog.weight_kg} kg` : '—', 'num'],
+            ['毛色・毛質', colorLabel, 'ja'],
+            ['マイクロチップ', chip(dog.microchip), 'num'],
+            ['遺伝子検査', dog.genes?.join('・') || '—', 'ja'],
+            ['状態', dog.status, 'ja'],
+          ]}
+        />
+      </Section>
+
+      <Section title="帳簿の項目" note="法令">
+        <Dl
+          rows={[
+            [
+              '繁殖者',
+              dog.is_self_bred
+                ? '自家繁殖'
+                : dog.breeder
+                  ? `${dog.breeder.name}${dog.breeder.contact_name ? `（${dog.breeder.contact_name}）` : ''}`
+                  : MISSING,
+              'ja',
+            ],
+            ['繁殖者の登録番号', dog.is_self_bred ? '—' : dog.breeder?.license_no || MISSING, 'num'],
+            ['入手先', dog.is_self_bred ? '—' : dog.supplier?.name || MISSING, 'ja'],
+            ['所有した日', dog.acquired_on ? ymd(dog.acquired_on) : MISSING, 'num'],
+            ['死亡した日', dog.died_on ? ymd(dog.died_on) : '—', 'num'],
+          ]}
+        />
+        <p className="mt-2.5 rounded-xl border border-adm-rule bg-adm-hint px-3 py-2.5 text-[11.5px] leading-relaxed text-adm-muted">
+          <b className="text-adm-ink">「未入力」は動物愛護管理法の帳簿に必要な項目です。</b>
+          自家繁殖の犬は誕生日が所有日として自動で入ります。仕入れた犬は現行台帳に取得日の記録がないため、
+          購入時の書類から補ってください。
+        </p>
+      </Section>
+
+      {dog.note && (
+        <Section title="メモ">
+          <p className="rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 text-[13px] leading-relaxed">
+            {dog.note}
+          </p>
+        </Section>
+      )}
+    </>
+  );
+}
+
+const MISSING = '未入力';
+
+/* ───────── 出産 ───────── */
+
+function LittersTab({ litters, sex }: { litters: LitterRow[]; sex: string }) {
+  if (sex === '♂') {
+    return (
+      <Section title="出産">
+        <Empty>種雄犬には出産記録がありません。相手の母犬のカルテに残ります。</Empty>
+      </Section>
+    );
+  }
+  if (litters.length === 0) {
+    return (
+      <Section title="出産">
+        <Empty>まだ記録がありません。</Empty>
+      </Section>
+    );
+  }
+
+  const n = litters.length;
+
+  return (
+    <div className="px-4 pt-3.5">
+      <ol className="ml-1.5">
+        {litters.map((l, i) => (
+          <li
+            key={l.id}
+            className={`relative border-l-2 pb-3.5 pl-6 ${i === n - 1 ? 'border-transparent' : 'border-adm-rule'}`}
+          >
+            <span
+              className={`absolute -left-[7px] top-1 h-3 w-3 rounded-full border-2 bg-adm-surface ${
+                i === 0 ? 'border-adm-action' : 'border-[#B9BDB6]'
+              }`}
+            />
+            <p className="num text-[14px] font-bold leading-tight">
+              {ymd(l.birth_date)}
+              <span className="ml-2 rounded border border-adm-rule bg-adm-paper px-1.5 py-px align-middle text-[10.5px] font-normal text-adm-muted">
+                {n - i}回目
+              </span>
+            </p>
+
+            <div className="mt-1.5 rounded-xl border border-adm-rule bg-adm-surface px-3 py-2.5">
+              <Kv k="父">
+                {l.sire_name ? (
+                  l.sire_id ? (
+                    <Link href={`/admin/dogs/${l.sire_id}`} className="text-adm-action underline underline-offset-2">
+                      {l.sire_name}
+                    </Link>
+                  ) : (
+                    l.sire_name
+                  )
+                ) : (
+                  <span className="text-adm-muted">未登録</span>
+                )}
+                {l.is_mix && <Tag>ミックス</Tag>}
+              </Kv>
+              <Kv k="妊娠日数">{l.gestation_days ? `${l.gestation_days}日` : '—'}</Kv>
+              <Kv k="分娩">{l.method ?? <span className="text-adm-muted">未記入</span>}</Kv>
+
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <Pup>♂ {l.male_count}</Pup>
+                <Pup>♀ {l.female_count}</Pup>
+                {l.stillborn_count > 0 && <Pup dead>死産 {l.stillborn_count}</Pup>}
+              </div>
+
+              {(l.note || l.checkup_date) && (
+                <p className="num mt-2 border-t border-adm-rule pt-2 text-[11.5px] text-adm-muted">
+                  {l.note && <span className="font-adm">{l.note}</span>}
+                  {l.note && l.checkup_date && <span>　／　</span>}
+                  {l.checkup_date && <span>仔犬検診 {ymd(l.checkup_date)}</span>}
+                </p>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+/* ───────── 血統 ───────── */
+
+function PedigreeTab({ dog }: { dog: DogDetail }) {
+  const linked = dog.sire_id || dog.dam_id;
+
+  return (
+    <Section title="血統">
+      {linked ? (
+        <Dl
+          rows={[
+            ['父', dog.sire_id ? '登録あり' : '—', 'ja'],
+            ['母', dog.dam_id ? '登録あり' : '—', 'ja'],
+          ]}
+        />
+      ) : (
+        <Empty>この犬の父母はまだ紐付いていません。</Empty>
+      )}
+
+      {dog.breeder_note && (
+        <>
+          <p className="mb-1.5 mt-4 text-[12px] text-adm-muted">現行台帳の記載</p>
+          <p className="rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 text-[14px]">
+            {dog.breeder_note}
+          </p>
+          <p className="mt-2.5 rounded-xl border border-adm-rule bg-adm-hint px-3 py-2.5 text-[11.5px] leading-relaxed text-adm-muted">
+            現行台帳の血統は「母・父」を1つの欄に書いた文字列で、犬舎にいない犬も多く含まれます。
+            <b className="text-adm-ink">推測で紐付けると血統が誤るため、原文のまま残しています。</b>
+            該当する犬が台帳にいる場合のみ、手作業で紐付けてください。
+          </p>
+        </>
+      )}
+    </Section>
+  );
+}
+
+/* ───────── ワクチン ───────── */
+
+function VaccineTab({ rows, due }: { rows: VaccinationRow[]; due: VaccineDueRow[] }) {
+  const kinds = ['混合', '狂犬病'];
+  return (
+    <>
+      <Section title="次回の予定">
+        <ul className="overflow-hidden rounded-xl border border-adm-rule bg-adm-surface">
+          {kinds.map((k) => {
+            const d = due.find((x) => x.kind === k);
+            return (
+              <li key={k} className="flex items-center justify-between gap-3 border-b border-adm-rule px-3.5 py-2.5 last:border-b-0">
+                <span className="text-[13px]">{k}</span>
+                <span className="text-right">
+                  <span className="num block text-[13px]">
+                    {d?.next_due_on ? ymd(d.next_due_on) : '記録なし'}
+                  </span>
+                  {d?.last_dosed_on && (
+                    <span className="num block text-[11px] text-adm-muted">前回 {ymd(d.last_dosed_on)}</span>
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </Section>
+
+      <Section title="接種の記録" note={`${rows.length}件`}>
+        {rows.length === 0 ? (
+          <Empty>記録がありません。</Empty>
+        ) : (
+          <ul className="overflow-hidden rounded-xl border border-adm-rule bg-adm-surface">
+            {rows.map((v) => (
+              <li key={v.id} className="flex items-center justify-between gap-3 border-b border-adm-rule px-3.5 py-2.5 last:border-b-0">
+                <span className="text-[13px]">{v.kind}</span>
+                <span className="num text-[13px]">{ymd(v.dosed_on)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+    </>
+  );
+}
+
+/* ───────── 共通 ───────── */
+
+function Section({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) {
+  return (
+    <section className="px-4 pt-3.5">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <h2 className="text-[13px] font-bold tracking-wide">{title}</h2>
+        {note && <span className="num text-[12px] text-adm-muted">{note}</span>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Dl({ rows }: { rows: [string, string, 'ja' | 'num'][] }) {
+  return (
+    <dl className="overflow-hidden rounded-xl border border-adm-rule bg-adm-surface">
+      {rows.map(([k, v, kind]) => (
+        <div key={k} className="flex items-baseline justify-between gap-3 border-b border-adm-rule px-3.5 py-2.5 last:border-b-0">
+          <dt className="shrink-0 text-[13px] text-adm-muted">{k}</dt>
+          <dd
+            className={`break-all text-right text-[13px] ${kind === 'num' ? 'num' : ''} ${
+              v === MISSING ? 'text-adm-danger' : ''
+            }`}
+          >
+            {v}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function Kv({ k, children }: { k: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-0.5">
+      <span className="text-[12.5px] text-adm-muted">{k}</span>
+      <span className="num text-right text-[13px]">{children}</span>
+    </div>
+  );
+}
+
+function Tag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="ml-1.5 rounded border border-adm-rule bg-adm-paper px-1.5 py-px font-adm text-[10.5px] text-adm-muted">
+      {children}
+    </span>
+  );
+}
+
+function Pup({ children, dead }: { children: React.ReactNode; dead?: boolean }) {
+  return (
+    <span
+      className={`num rounded-md border px-2.5 py-0.5 text-[12px] ${
+        dead ? 'border-[#E3C9C7] bg-adm-paper text-adm-danger' : 'border-adm-rule bg-adm-paper'
+      }`}
+    >
+      {children}
+    </span>
+  );
+}
+
+function Empty({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 text-[12.5px] leading-relaxed text-adm-muted">
+      {children}
+    </p>
+  );
+}
+
+function shiftMonthIso(dateIso: string, addMonths: number): string {
+  const [y, m] = dateIso.split('-').map(Number);
+  const total = y * 12 + (m - 1) + addMonths;
+  return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}-01`;
+}

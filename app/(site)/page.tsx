@@ -1,10 +1,10 @@
-import { HeroSection } from "./_components/hero";
-import { PuppiesSection } from "./_components/puppies";
-import { AdoptionSection } from "./_components/adoption";
-import { VoiceSection } from "./_components/voice";
-import { LinksSection } from "./_components/links";
-import { ContactSection } from "./_components/contact";
-import { InstagramSection } from "./_components/instagram";
+import { HeroSection } from "@/app/_components/hero";
+import { PuppiesSection } from "@/app/_components/puppies";
+import { AdoptionSection } from "@/app/_components/adoption";
+import { VoiceSection } from "@/app/_components/voice";
+import { LinksSection } from "@/app/_components/links";
+import { ContactSection } from "@/app/_components/contact";
+import { InstagramSection } from "@/app/_components/instagram";
 
 // ISR: 1時間ごとに再生成（app/_config/isr.ts の defaultRevalidateTime と同値）
 export const revalidate = 3600;

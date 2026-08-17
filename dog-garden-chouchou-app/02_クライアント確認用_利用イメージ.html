@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>犬舎管理アプリ 利用イメージ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F5F2; --ink:#1A1C1A; --muted:#6B6F6B; --rule:#DEDFD9;
+  --action:#2F6B4F; --danger:#A8322D;
+  --tp:#C98A2E; --ml:#8A93A0; --ci:#8B5E3C; --bfr:#5E7C6B;
+  --sans:"Zen Kaku Gothic New",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.7}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px}
+h1{font-size:26px;font-weight:500;margin:0 0 6px}
+.lead{color:var(--muted);font-size:14px;margin:0 0 48px}
+h2{font-size:19px;font-weight:500;margin:56px 0 6px;padding-top:20px;border-top:1px solid var(--rule)}
+h2:first-of-type{border-top:none;padding-top:0}
+.note{color:var(--muted);font-size:14px;margin:0 0 24px}
+
+/* 場面カード */
+.scenes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.scene{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:20px}
+.scene h3{font-size:15px;font-weight:500;margin:0 0 2px}
+.scene .when{font-size:12px;color:var(--muted);margin:0 0 14px}
+.scene ol{margin:0;padding-left:0;list-style:none;counter-reset:s}
+.scene li{counter-increment:s;font-size:14px;padding:9px 0 9px 30px;border-top:1px solid var(--rule);position:relative}
+.scene li::before{content:counter(s);position:absolute;left:0;top:9px;width:20px;height:20px;border-radius:50%;
+  font-family:var(--mono);font-size:11px;display:flex;align-items:center;justify-content:center;
+  background:var(--paper);color:var(--muted)}
+.bar{height:4px;border-radius:0;margin:-20px -20px 16px;border-radius:12px 12px 0 0}
+
+/* スマホ画面 */
+.phones{display:flex;gap:20px;flex-wrap:wrap}
+.col{flex:1;min-width:240px}
+.step{font-size:12px;color:var(--muted);margin:0 0 8px}
+.phone{background:#fff;border:1px solid var(--rule);border-radius:20px;padding:16px;min-height:420px}
+.ttl{font-size:17px;font-weight:500;margin:0 0 12px}
+.sub{font-size:13px;color:var(--muted)}
+.mono{font-family:var(--mono)}
+.chips{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap}
+.chip{font-size:12px;padding:4px 10px;border-radius:14px;border:1px solid var(--rule);color:var(--muted)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.row{display:flex;gap:10px;padding:11px 0;border-top:1px solid var(--rule)}
+.breed{width:3px;flex:none}
+.name{font-size:15px}
+.meta{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:14px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:14px}
+.tabs .on{color:var(--ink);font-weight:500}
+.tl{border-left:2px solid var(--rule);padding-left:14px}
+.tl .rec{margin-bottom:18px}
+.tl .d{font-family:var(--mono);font-size:14px}
+.dots{font-size:15px;letter-spacing:1px}
+.field{border:1px solid var(--rule);border-radius:8px;padding:9px 11px;margin:4px 0 14px;font-size:14px}
+.lab{font-size:12px;color:var(--muted)}
+.step-num{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.step-num span.b{border:1px solid var(--rule);border-radius:8px;padding:4px 12px;font-size:16px}
+.step-num span.v{font-family:var(--mono);font-size:17px;min-width:22px;text-align:center}
+.btn{background:var(--action);color:#fff;text-align:center;padding:13px;border-radius:8px;font-size:15px;margin-top:8px}
+.btn.ghost{background:none;color:var(--ink);border:1px solid var(--rule)}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;background:var(--paper);color:var(--muted);border:1px solid var(--rule);align-self:center}
+.pup{border-top:1px solid var(--rule);padding:12px 0}
+.pup-head{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.ribbon{width:11px;height:11px;border-radius:50%;flex:none}
+.prev{font-size:11px;color:var(--muted);margin-left:auto}
+.pup-in{display:flex;align-items:center;gap:7px}
+.unit{font-size:12px;color:var(--muted)}
+.delta{font-size:12px;min-width:30px}
+.up{color:var(--action)} .down{color:var(--danger)}
+.fed{font-size:12px;padding:5px 10px;border:1px solid var(--rule);border-radius:8px;color:var(--muted)}
+.fed.on{background:var(--action);color:#fff;border-color:var(--action)}
+.dot{width:15px;height:15px;margin:0 3px;border-radius:50%;flex:none;display:inline-block;align-self:center}
+
+/* 変わること */
+table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+th,td{text-align:left;padding:13px 16px;border-top:1px solid var(--rule)}
+th{background:var(--paper);font-weight:500;font-size:13px;color:var(--muted);border-top:none}
+td:first-child{width:34%}
+.no{color:var(--danger)}
+.yes{color:var(--action)}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--rule);font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>犬舎管理アプリ 利用イメージ</h1>
+<p class="lead">スマートフォンで日々の記録を管理します。2026年8月16日（第2版）</p>
+
+<h2>1. 毎日の使い方</h2>
+<p class="note">よく使う場面は3つだけです。どれも3ステップで終わります。</p>
+
+<div class="scenes">
+  <div class="scene">
+    <div class="bar" style="background:var(--action)"></div>
+    <h3>犬を確認する</h3>
+    <p class="when">毎日ひらく画面</p>
+    <ol>
+      <li>犬種で絞り込む</li>
+      <li>カルテを開く</li>
+      <li>出産履歴を見る</li>
+    </ol>
+  </div>
+  <div class="scene">
+    <div class="bar" style="background:var(--tp)"></div>
+    <h3>出産を記録する</h3>
+    <p class="when">生まれたその日に</p>
+    <ol>
+      <li>母犬を選ぶ</li>
+      <li>日数と頭数を入力する</li>
+      <li>保存する</li>
+    </ol>
+  </div>
+  <div class="scene">
+    <div class="bar" style="background:var(--ci)"></div>
+    <h3>仔犬を管理する</h3>
+    <p class="when">ワクチンと引渡し</p>
+    <ol>
+      <li>仔犬の一覧を開く</li>
+      <li>ワクチン接種日を残す</li>
+      <li>販売・引渡しを記録する</li>
+    </ol>
+  </div>
+</div>
+
+<h2>2. 出産を記録する</h2>
+<p class="note">いちばん使う場面です。母犬を選んでから保存まで、3画面で完了します。</p>
+
+<div class="phones">
+
+  <div class="col">
+    <p class="step">① 母犬をさがす</p>
+    <div class="phone">
+      <p class="ttl">犬</p>
+      <div class="chips">
+        <span class="chip on">TP</span><span class="chip">ML</span>
+        <span class="chip">CI</span><span class="chip">BFR</span>
+      </div>
+      <div class="row"><div class="breed" style="background:var(--tp)"></div>
+        <div><div class="name">クッキー ♀</div><div class="meta">2023/07/20 · 2.6kg</div><div class="sub">出産 4回</div></div></div>
+      <div class="row"><div class="breed" style="background:var(--tp)"></div>
+        <div><div class="name">ピノ ♀</div><div class="meta">2024/01/13 · 1.9kg</div><div class="sub">出産 3回</div></div></div>
+      <div class="row"><div class="breed" style="background:var(--tp)"></div>
+        <div><div class="name">マロン ♀</div><div class="meta">2024/02/23 · 2.6kg</div><div class="sub">出産 2回</div></div></div>
+      <div class="row"><div class="breed" style="background:var(--tp)"></div>
+        <div><div class="name">ポコ ♀</div><div class="meta">2024/05/11 · 2.6kg</div><div class="sub">出産 2回</div></div></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="step">② 履歴をひらく</p>
+    <div class="phone">
+      <p class="ttl">クッキー <span class="sub">♀ トイプードル</span></p>
+      <div class="tabs"><span>基本</span><span class="on">出産</span><span>血統</span><span>ワクチン</span></div>
+      <p class="sub" style="margin:0 0 16px">次回交配可能 <span class="mono">2026年11月〜</span></p>
+      <div class="tl">
+        <div class="rec">
+          <div class="d">2026/06/07</div>
+          <div class="sub">父 エルメス</div>
+          <div class="meta">62日 帝王切開</div>
+          <div class="dots">♂ ● &nbsp; ♀ ● ●</div>
+          <div class="sub">仔犬検診 <span class="mono">2026/07/26</span></div>
+        </div>
+        <div class="rec">
+          <div class="d">2025/11/08</div>
+          <div class="sub">父 エルメス</div>
+          <div class="meta">60日 自然</div>
+          <div class="dots">♂ ●</div>
+        </div>
+        <div class="rec">
+          <div class="d">2025/04/10</div>
+          <div class="sub">父 エルメス</div>
+          <div class="meta">60日 自然</div>
+          <div class="dots">♀ ● ● ● ●</div>
+        </div>
+      </div>
+      <div class="btn ghost">記録を追加</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="step">③ 入力して保存</p>
+    <div class="phone">
+      <p class="ttl">クッキー の記録</p>
+      <div class="lab">出産日</div>
+      <div class="field mono">2026/08/16</div>
+      <div class="lab">父</div>
+      <div class="field">エルメス <span class="tag">トイプードル</span></div>
+      <div class="lab">妊娠日数</div>
+      <div class="field mono">61 日</div>
+      <div class="lab" style="margin-bottom:6px">分娩</div>
+      <div class="chips"><span class="chip on">自然</span><span class="chip">帝王切開</span><span class="chip">後帝</span></div>
+      <div class="step-num"><span style="width:24px">♂</span><span class="b">−</span><span class="v">2</span><span class="b">＋</span></div>
+      <div class="step-num"><span style="width:24px">♀</span><span class="b">−</span><span class="v">1</span><span class="b">＋</span></div>
+      <div class="step-num"><span style="width:24px;font-size:12px;color:var(--muted)">死産</span><span class="b">−</span><span class="v">0</span><span class="b">＋</span></div>
+      <div class="btn">保存</div>
+    </div>
+  </div>
+
+</div>
+
+<h2>3. 仔犬を見分ける</h2>
+<p class="note">同じ腹の仔犬は、母・父・誕生日・犬種がすべて同じです。違うのは性別と毛色だけなので、毛色の丸で見分けます。</p>
+
+<div class="phones">
+
+  <div class="col">
+    <p class="step">① 仔犬の一覧</p>
+    <div class="phone">
+      <p class="ttl">クッキー ④ の仔</p>
+      <p class="sub" style="margin:0 0 14px">2026/06/07 生 · <span class="mono">♂2 ♀3</span></p>
+
+      <div class="row" style="border-top:1px solid var(--rule)">
+        <span class="dot" style="background:#B5462F"></span>
+        <div style="flex:1"><div class="name">♂ レッド</div><div class="sub">混合 <span class="mono">2回</span> 接種済み</div></div>
+      </div>
+      <div class="row">
+        <span class="dot" style="background:#B5462F;box-shadow:0 0 0 3px #2C5F8A"></span>
+        <div style="flex:1"><div class="name">♀ レッド　<span class="sub">紐 青</span></div><div class="sub">混合 <span class="mono">2回</span> 接種済み</div></div>
+      </div>
+      <div class="row">
+        <span class="dot" style="background:#B5462F;box-shadow:0 0 0 3px #D4A017"></span>
+        <div style="flex:1"><div class="name">♀ レッド　<span class="sub">紐 黄</span></div><div class="sub">混合 <span class="mono">1回</span> 接種済み</div></div>
+      </div>
+      <div class="row">
+        <span class="dot" style="background:#3F3F3C"></span>
+        <div style="flex:1"><div class="name">♀ ブラック</div><div class="sub">混合 <span class="mono">2回</span> 接種済み</div></div>
+      </div>
+      <div class="row">
+        <span class="dot" style="background:linear-gradient(90deg,#3F3F3C 50%,#C9975B 50%)"></span>
+        <div style="flex:1"><div class="name">♂ ブラックタン</div><div class="sub">混合 <span class="mono">1回</span> 接種済み</div></div>
+      </div>
+      <p class="sub" style="margin:14px 0 0;font-size:12px">丸の内側が毛色、外周の輪が紐の色です。同じ毛色・同じ性別が複数いるときだけ紐が付きます。</p>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="step">② 仔犬のカルテ</p>
+    <div class="phone">
+      <p class="ttl"><span class="dot" style="background:#3F3F3C;margin-right:7px"></span>♀ ブラック</p>
+      <p class="sub" style="margin:0 0 14px">クッキー ④ の仔 · 2026/06/07 生</p>
+      <div class="tabs"><span>基本</span><span>血統</span><span class="on">ワクチン</span><span>販売</span></div>
+
+      <p class="sub" style="margin:0 0 4px">混合ワクチン</p>
+      <p class="ttl" style="margin:0 0 16px">2回 接種済み</p>
+
+      <div class="row" style="border-top:1px solid var(--rule)">
+        <div style="flex:1"><div class="meta">2026/08/16</div><div class="name">混合ワクチン</div></div>
+        <div class="tag">2回目</div>
+      </div>
+      <div class="row">
+        <div style="flex:1"><div class="meta">2026/07/26</div><div class="name">混合ワクチン</div></div>
+        <div class="tag">1回目</div>
+      </div>
+
+      <div class="btn ghost" style="margin-top:16px">接種日を追加</div>
+      <div class="btn ghost" style="margin-top:8px">繁殖犬にする</div>
+      <p class="sub" style="margin:14px 0 0;font-size:12px">「何回目」は接種日の件数から自動で出ます。入力するのは日付だけです。</p>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="step">③ 毛色の見本</p>
+    <div class="phone">
+      <p class="ttl">毛色</p>
+      <p class="sub" style="margin:0 0 16px">台帳のカラー欄をそのまま使います</p>
+      <div class="row" style="border-top:1px solid var(--rule)"><span class="dot" style="background:#DBA96B"></span><div class="name">AP　アプリコット</div></div>
+      <div class="row"><span class="dot" style="background:#B5462F"></span><div class="name">RD　レッド</div></div>
+      <div class="row"><span class="dot" style="background:#E2D3B0"></span><div class="name">CR　クリーム</div></div>
+      <div class="row"><span class="dot" style="background:#C9A57B"></span><div class="name">FN　フォーン</div></div>
+      <div class="row"><span class="dot" style="background:#3F3F3C"></span><div class="name">BK　ブラック</div></div>
+      <div class="row"><span class="dot" style="background:linear-gradient(90deg,#3F3F3C 50%,#C9975B 50%)"></span><div class="name">BK T　ブラックタン</div></div>
+      <div class="row"><span class="dot" style="background:#F2F0EA;border:1px solid var(--rule)"></span><div class="name">W　ホワイト</div></div>
+      <p class="sub" style="margin:14px 0 0;font-size:12px">2色の毛色は丸を半分ずつで表します。実際の色は現物に合わせて調整します。</p>
+    </div>
+  </div>
+
+</div>
+
+<h2>4. いまと何が変わるか</h2>
+<p class="note">入力する項目が減り、書き写しがなくなります。</p>
+
+<table>
+  <tr><th>いま（スプレッドシート）</th><th>アプリ</th></tr>
+  <tr><td>交配は6回目までしか書けない</td><td class="yes">何回でも記録できる</td></tr>
+  <tr><td>「61日 帝」と1マスにまとめて書く</td><td class="yes">日数と分娩方法を分けて選ぶ</td></tr>
+  <tr><td>種雄犬の名前を毎回手で書く</td><td class="yes">登録済みの犬から選ぶだけ</td></tr>
+  <tr><td>ミックスかどうか「Ⅿ」を付ける</td><td class="yes">犬種から自動で判定する</td></tr>
+  <tr><td>仔犬検診日を数えて書く</td><td class="yes">出産日から自動で表示する</td></tr>
+  <tr><td>次回交配可能月を数えて書く</td><td class="yes">出産日から自動で表示する</td></tr>
+  <tr><td>親は「クッキー・サンダー」と文字で書く</td><td class="yes">タップで親のカルテへたどれる</td></tr>
+  <tr><td>横に53列、画面を延々スクロールする</td><td class="yes">スマホで縦に読める</td></tr>
+  <tr><td>兄弟の仔犬は紐の色を覚えておく</td><td class="yes">毛色の丸と紐の輪が画面に出る</td></tr>
+  <tr><td>仔犬のワクチン回数を紙やメモで管理する</td><td class="yes">仔犬ごとに接種日を残せる</td></tr>
+  <tr><td>「何回接種したか」を数え直す</td><td class="yes">自動で回数が出る</td></tr>
+</table>
+
+<h2>5. 今月のアラートを見る</h2>
+<p class="note">スプレッドシートの「今月のアラート一覧」にあたる画面です。ワクチンの次回時期・交配できる時期・仔犬検診を、その月ごとにまとめて表示します。<strong>通知は届きません。アプリを開いて確認する画面です。</strong>月を前後に切り替えて、先の予定も見られます。</p>
+<div class="phone">
+  <div class="phone-title">アラート</div>
+  <div class="screen">
+    <div class="sec-title">2026年8月　　‹ 前月　翌月 ›</div>
+    <div class="row"><span class="lbl">混合ワクチン</span><span class="val">1件</span></div>
+    <div class="row"><span class="val">スフレ　2026/08/06</span></div>
+    <div class="row"><span class="lbl">狂犬病ワクチン</span><span class="val">0件</span></div>
+    <div class="row"><span class="lbl">交配できる時期</span><span class="val">3件</span></div>
+    <div class="row"><span class="val">ポコ / ジュジュ / ラン</span></div>
+    <div class="row"><span class="lbl">仔犬検診（7週）</span><span class="val">2件</span></div>
+    <div class="row"><span class="val">ピノ 2026/08/21 / リン 2026/08/12</span></div>
+  </div>
+</div>
+<p class="note">期限を過ぎているものには「期限超過」と文字で添えます。赤いマークや点滅は使いません。犬の名前をタップするとカルテが開きます。<br>まだ一度もワクチンを打っていない子は、別のタブにまとめて表示します。</p>
+
+<h2>6. 法令の書類をアプリから出す</h2>
+<p class="note">第一種動物取扱業には、<strong>1頭ごとの帳簿を5年間保存する義務</strong>と、<strong>毎年4月1日〜5月30日に前年度の実績を届け出る義務</strong>があります。これまで手作業だった部分を、アプリから出力できるようにします。</p>
+<table>
+  <tr><th>書類</th><th>内容</th><th>いつ使うか</th></tr>
+  <tr><td>帳簿</td><td>1頭ごとの品種・生年月日・繁殖者・所有日・引渡し日・引渡し先など13項目</td><td>いつでも。CSVで保存できます</td></tr>
+  <tr><td>定期報告</td><td>犬種ごとに「期首の数＋増えた数−販売等−死亡＝期末の数」を自動集計</td><td>毎年4〜5月の届出時</td></tr>
+</table>
+<p class="note">数が合わない場合は画面にそのまま表示します。ごまかさず、どこがずれているか分かるようにします。</p>
+
+<h2>7. ホームページと繋げる</h2>
+<p class="note">アプリで「公開する」を押した仔犬だけが、公式ホームページの仔犬紹介ページに出ます。<strong>同じ子を2回入力する必要はありません。</strong></p>
+<table>
+  <tr><th></th><th>アプリに入れる</th><th>ホームページに出る</th></tr>
+  <tr><td>名前・犬種・性別・誕生日・毛色</td><td class="yes">入れる</td><td class="yes">出る</td></tr>
+  <tr><td>写真</td><td class="yes">入れる</td><td class="yes">公開用に選んだものだけ出る</td></tr>
+  <tr><td>マイクロチップ番号</td><td class="yes">入れる</td><td class="no">出ない</td></tr>
+  <tr><td>仕入れ元・繁殖者</td><td class="yes">入れる</td><td class="no">出ない</td></tr>
+  <tr><td>お客様の情報</td><td class="yes">入れる</td><td class="no">出ない</td></tr>
+</table>
+
+<h2>8. 今回つくらないもの</h2>
+<p class="note">毎日アプリを開いて確認する運用のため、以下は作りません。</p>
+<table>
+  <tr><th>項目</th><th>理由</th></tr>
+  <tr><td class="no">通知・メール・LINE連携</td><td>毎日開いて確認するため不要</td></tr>
+  <tr><td class="no">赤い警告マークや自動のお知らせ</td><td>アラートは画面で見るだけ。マークで急かしません</td></tr>
+  <tr><td class="no">仔犬の毎日の体重・哺乳の記録</td><td>毎日は測らないため</td></tr>
+</table>
+
+<footer>
+  利用者3名 / スマートフォン主体 / 公開する仔犬のみホームページに連携<br>
+  画面の見た目は実装時に調整します。この資料は流れの確認用です。
+</footer>
+
+</div>
+</body>
+</html>

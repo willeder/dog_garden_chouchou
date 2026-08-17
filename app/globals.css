@@ -47,9 +47,20 @@ html {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-jp);
   font-weight: 500;
   line-height: 1.6;
+}
+
+/*
+ * フォントは next/font の CSS変数が「定義されている要素」で解決する必要がある。
+ * @theme は :root に出力されるが、--font-mplus-1p は
+ * next/font のクラスが付いた要素にしか無いため、:root では解決できず空になる。
+ * （この指定が無いと本文が system-ui にフォールバックする）
+ */
+.site-root {
+  --font-jp: var(--font-mplus-1p), system-ui, sans-serif;
+  --font-en: var(--font-poller-one), system-ui, sans-serif;
+  font-family: var(--font-jp);
 }
 
 /* ============================================================
@@ -106,4 +117,63 @@ body {
   background-image: url("/assets/top-insta-bg-pattern.svg");
   background-repeat: repeat;
   background-size: 1024px 432px;
+}
+
+/* ============================================================
+   管理アプリ（/admin, /login）のトークン
+   ------------------------------------------------------------
+   公開サイトのピンク・ベージュは明度が高く、犬舎の屋外・逆光では
+   文字が沈むため使わない。ここは「現場で読めること」を基準に決めている。
+   --color-adm-action と --color-adm-paper のコントラスト比は 5.9:1
+   （WCAG AA の 4.5:1 を満たす）。
+
+   公開サイトのトークンと衝突させないため、すべて adm- を前置する。
+   （例: サイトの --color-ink は #696969、管理アプリは #1A1C1A）
+   ============================================================ */
+@theme {
+  --color-adm-paper: #f5f5f2;
+  --color-adm-surface: #ffffff;
+  --color-adm-ink: #1a1c1a;
+  --color-adm-muted: #6b6f6b;
+  --color-adm-rule: #dedfd9;
+  --color-adm-action: #2f6b4f;
+  --color-adm-danger: #a8322d;
+  --color-adm-hint: #efefea;
+
+  /* 犬種色（犬一覧の縦バー。breeds.hex と同値） */
+  --color-adm-tp: #c98a2e;
+  --color-adm-ml: #8a93a0;
+  --color-adm-ci: #8b5e3c;
+  --color-adm-bfr: #5e7c6b;
+  --color-adm-po: #d9a441;
+
+  --font-adm: var(--font-zen-kaku);
+  --font-adm-mono: var(--font-jetbrains);
+}
+
+/* 管理アプリの全体設定。公開サイトには影響させない */
+.adm-root {
+  /* 上と同じ理由で、ここで実体を宣言する */
+  --font-adm: var(--font-zen-kaku), system-ui, sans-serif;
+  --font-adm-mono: var(--font-jetbrains), ui-monospace, monospace;
+  font-family: var(--font-adm);
+  font-weight: 400;
+  line-height: 1.6;
+  overscroll-behavior-y: none;
+}
+
+/*
+ * 数値・日付・マイクロチップは必ず等幅にする。
+ * 桁が揃うことで履歴を縦に並べたときに差が読み取れ、
+ * チップ番号（392 149 002 083 297）の照合で桁ずれが起きない。
+ * 装飾ではなく機能要件。
+ */
+.adm-root .num {
+  font-family: var(--font-adm-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* タップ領域は最小 44px */
+.adm-root .tap {
+  min-height: 44px;
 }
