@@ -29,7 +29,7 @@ export default async function DogPage({ params, searchParams }: Props) {
     .select(
       `id, name, sex, breed_code, birthday, weight_kg, microchip, color, color_code,
        coat_type_code, status, is_external, genes, breeder_note, is_self_bred,
-       acquired_on, died_on, note, sire_id, dam_id,
+       acquired_on, died_on, note, sire_id, dam_id, is_published,
        breeds ( code, name, hex ),
        coat_colors ( code, name, hex, hex2 ),
        coat_types ( code, name ),
@@ -103,7 +103,13 @@ export default async function DogPage({ params, searchParams }: Props) {
         >
           ‹
         </Link>
-        <h1 className="truncate text-[17px] font-bold tracking-tight">{dog.name}</h1>
+        <h1 className="min-w-0 flex-1 truncate text-[17px] font-bold tracking-tight">{dog.name}</h1>
+        <Link
+          href={`/admin/dogs/${id}/edit`}
+          className="tap flex shrink-0 items-center rounded-lg border border-adm-rule px-3 text-[13px] font-medium text-adm-action"
+        >
+          編集
+        </Link>
       </header>
 
       <div className="border-b border-adm-rule bg-adm-surface px-4 pt-3.5">
@@ -168,6 +174,16 @@ export default async function DogPage({ params, searchParams }: Props) {
         />
       )}
       {tab === '出産' && <LittersTab litters={litters} sex={dog.sex} />}
+      {tab === '出産' && dog.sex === '♀' && (
+        <div className="fixed inset-x-0 bottom-[58px] z-20 mx-auto max-w-2xl px-4 pb-3">
+          <Link
+            href={`/admin/litters/new?dam=${dog.id}`}
+            className="tap flex items-center justify-center rounded-xl bg-adm-action px-4 py-3.5 text-[14.5px] font-bold text-white shadow-lg"
+          >
+            ＋ 出産を記録
+          </Link>
+        </div>
+      )}
       {tab === '血統' && <PedigreeTab dog={dog} />}
       {tab === 'ワクチン' && <VaccineTab rows={vaccinations} due={due} />}
 
@@ -209,6 +225,23 @@ function BasicTab({ dog }: { dog: DogDetail }) {
           ]}
         />
       </Section>
+
+      {(['在舎', '商談中', '売約'] as string[]).includes(dog.status) && (
+        <Section title="公式サイト">
+          <Link
+            href={`/admin/dogs/${dog.id}/publish`}
+            className="tap flex items-center justify-between gap-3 rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 active:bg-adm-paper"
+          >
+            <span className="text-[13.5px] font-medium">サイト公開の設定</span>
+            <span className="shrink-0 text-[13px] text-adm-muted">
+              <span className={dog.is_published ? 'font-bold text-adm-action' : ''}>
+                {dog.is_published ? '公開中' : '出していません'}
+              </span>
+              <span className="ml-1.5">›</span>
+            </span>
+          </Link>
+        </Section>
+      )}
 
       <Section title="帳簿の項目" note="法令">
         <Dl

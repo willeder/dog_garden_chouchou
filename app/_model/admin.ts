@@ -46,6 +46,7 @@ export type DogListItem = DogListRow & {
 };
 
 export type DogDetail = DogListRow & {
+  is_published: boolean;
   color: string | null;
   genes: string[] | null;
   breeder_note: string | null;

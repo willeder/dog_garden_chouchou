@@ -12,6 +12,17 @@ export function ymd(v: string | null | undefined): string {
   return m ? `${m[1]}/${m[2]}/${m[3]}` : v;
 }
 
+/**
+ * 「2023年5月7日」。
+ * 入力欄の日付ピッカーは端末の言語で表記が変わり、05/07 が5月7日か7月5日か
+ * 分からなくなる。入れた日付をこの形でも出して、読み違えを防ぐ。
+ */
+export function ymdJp(v: string | null | undefined): string {
+  if (!v) return '';
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[1]}年${Number(m[2])}月${Number(m[3])}日` : v;
+}
+
 export function ym(v: string | null | undefined): string {
   if (!v) return '—';
   const m = v.match(/^(\d{4})-(\d{2})/);

@@ -99,6 +99,15 @@ export default async function HomePage({ searchParams }: Props) {
         );
       })}
 
+      <div className="px-4 pt-5">
+        <Link
+          href="/admin/litters/new"
+          className="tap flex items-center justify-center rounded-xl border border-adm-action bg-adm-surface px-4 py-3 text-[14px] font-bold text-adm-action"
+        >
+          ＋ 出産を記録
+        </Link>
+      </div>
+
       <p className="px-4 py-6 text-[11.5px] leading-relaxed text-adm-muted">
         退役・引渡済・死亡の犬と外交配の♂は対象外です。犬名を押すとカルテが開きます。
       </p>
