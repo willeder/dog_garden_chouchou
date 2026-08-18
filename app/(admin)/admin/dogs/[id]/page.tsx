@@ -88,6 +88,49 @@ export default async function DogPage({ params, searchParams }: Props) {
 
   const mainPhoto = publicPhotos[0] ?? privatePhotos[0];
 
+  /**
+   * 血統。父と母を実際に引いてくる。
+   * 名前・犬種・毛色・遺伝子までここで見えないと、次の交配を決められない。
+   */
+  const parentIds = [dog.sire_id, dog.dam_id].filter(Boolean) as string[];
+  const { data: parentRaw } = parentIds.length
+    ? await supabase
+        .from('dogs')
+        .select(
+          `id, name, sex, breed_code, birthday, weight_kg, genes, dam_id, sire_id, is_external, status,
+           breeds ( name, hex ), coat_colors ( name, hex, hex2 ), coat_types ( name )`,
+        )
+        .in('id', parentIds)
+        .is('deleted_at', null)
+    : { data: [] as unknown[] };
+
+  const parents = new Map<string, Kin>(((parentRaw ?? []) as unknown as Kin[]).map((k) => [k.id, k]));
+  const sire = dog.sire_id ? parents.get(dog.sire_id) ?? null : null;
+  const dam = dog.dam_id ? parents.get(dog.dam_id) ?? null : null;
+
+  // 祖父母は名前だけ出す。ここまで出せば「同じ血が濃くないか」の判断はできる
+  const grandIds = [sire?.sire_id, sire?.dam_id, dam?.sire_id, dam?.dam_id].filter(Boolean) as string[];
+  const { data: grandRaw } = grandIds.length
+    ? await supabase.from('dogs').select('id, name').in('id', grandIds).is('deleted_at', null)
+    : { data: [] as { id: string; name: string }[] };
+  const grand = new Map<string, string>(
+    ((grandRaw ?? []) as { id: string; name: string }[]).map((g) => [g.id, g.name]),
+  );
+
+  // 親の顔写真（サイト用の1枚目）
+  const { data: parentPhotoRaw } = parentIds.length
+    ? await supabase
+        .from('dog_photos')
+        .select('dog_id, path, sort_order')
+        .in('dog_id', parentIds)
+        .eq('bucket', PUBLIC_BUCKET)
+        .order('sort_order')
+    : { data: [] as { dog_id: string; path: string }[] };
+  const parentPhoto = new Map<string, string>();
+  for (const p of (parentPhotoRaw ?? []) as { dog_id: string; path: string }[]) {
+    if (!parentPhoto.has(p.dog_id)) parentPhoto.set(p.dog_id, publicPhotoUrl(p.path));
+  }
+
   const totalPups = litters.reduce((n, l) => n + l.male_count + l.female_count, 0);
   const nextMating = litters[0]
     ? shiftMonthIso(litters[0].birth_date, 5)
@@ -142,8 +185,8 @@ export default async function DogPage({ params, searchParams }: Props) {
         </div>
 
         <dl className="mt-3.5 flex border-t border-adm-rule">
-          <Stat v={dog.sex === '♀' ? String(litters.length) : '—'} k="出産" />
-          <Stat v={dog.sex === '♀' ? String(totalPups) : '—'} k="産子" />
+          <Stat v={dog.sex === '♀' && litters.length > 0 ? String(litters.length) : '—'} k="出産" />
+          <Stat v={dog.sex === '♀' && litters.length > 0 ? String(totalPups) : '—'} k="産子" />
           <Stat v={dog.weight_kg ? String(dog.weight_kg) : '—'} k="体重kg" />
           <Stat v={nextMating ? ym(nextMating).replace(/^\d+年/, '') : '—'} k="交配可" />
         </dl>
@@ -184,7 +227,7 @@ export default async function DogPage({ params, searchParams }: Props) {
           </Link>
         </div>
       )}
-      {tab === '血統' && <PedigreeTab dog={dog} />}
+      {tab === '血統' && <PedigreeTab dog={dog} sire={sire} dam={dam} grand={grand} photo={parentPhoto} />}
       {tab === 'ワクチン' && <VaccineTab rows={vaccinations} due={due} />}
 
       <div className="h-6" />
@@ -362,36 +405,159 @@ function LittersTab({ litters, sex }: { litters: LitterRow[]; sex: string }) {
 
 /* ───────── 血統 ───────── */
 
-function PedigreeTab({ dog }: { dog: DogDetail }) {
-  const linked = dog.sire_id || dog.dam_id;
+type Kin = {
+  id: string;
+  name: string;
+  sex: string;
+  breed_code: string;
+  birthday: string | null;
+  weight_kg: number | null;
+  genes: string[] | null;
+  dam_id: string | null;
+  sire_id: string | null;
+  is_external: boolean;
+  status: string;
+  breeds: { name: string; hex: string } | null;
+  coat_colors: { name: string; hex: string; hex2: string | null } | null;
+  coat_types: { name: string } | null;
+};
+
+function PedigreeTab({
+  dog,
+  sire,
+  dam,
+  grand,
+  photo,
+}: {
+  dog: DogDetail;
+  sire: Kin | null;
+  dam: Kin | null;
+  grand: Map<string, string>;
+  photo: Map<string, string>;
+}) {
+  // 父と母の犬種が違えばミックス。交配の記録と表示を合わせる
+  const isMix = sire && dam ? sire.breed_code !== dam.breed_code : null;
 
   return (
-    <Section title="血統">
-      {linked ? (
-        <Dl
-          rows={[
-            ['父', dog.sire_id ? '登録あり' : '—', 'ja'],
-            ['母', dog.dam_id ? '登録あり' : '—', 'ja'],
-          ]}
-        />
-      ) : (
-        <Empty>この犬の父母はまだ紐付いていません。</Empty>
-      )}
+    <>
+      <Section title="両親">
+        {sire || dam ? (
+          <div className="space-y-2">
+            <KinCard role="父" kin={sire} grand={grand} photo={photo} />
+            <KinCard role="母" kin={dam} grand={grand} photo={photo} />
+            {isMix !== null && (
+              <p className="rounded-xl border border-adm-rule bg-adm-hint px-3 py-2.5 text-[11.5px] leading-relaxed text-adm-muted">
+                {isMix ? (
+                  <>
+                    <b className="text-adm-ink">父と母の犬種が違います（ミックス）。</b>
+                    サイトに出すときは犬種の表記にご注意ください。
+                  </>
+                ) : (
+                  <>父と母は同じ犬種です（{sire?.breeds?.name ?? sire?.breed_code}）。</>
+                )}
+              </p>
+            )}
+          </div>
+        ) : (
+          <Empty>この犬の父母はまだ紐付いていません。</Empty>
+        )}
+      </Section>
 
       {dog.breeder_note && (
-        <>
-          <p className="mb-1.5 mt-4 text-[12px] text-adm-muted">現行台帳の記載</p>
-          <p className="rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 text-[14px]">
+        <Section title="現行台帳の記載">
+          <p className="rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 text-[14px] leading-relaxed">
             {dog.breeder_note}
           </p>
           <p className="mt-2.5 rounded-xl border border-adm-rule bg-adm-hint px-3 py-2.5 text-[11.5px] leading-relaxed text-adm-muted">
             現行台帳の血統は「母・父」を1つの欄に書いた文字列で、犬舎にいない犬も多く含まれます。
             <b className="text-adm-ink">推測で紐付けると血統が誤るため、原文のまま残しています。</b>
-            該当する犬が台帳にいる場合のみ、手作業で紐付けてください。
           </p>
-        </>
+        </Section>
       )}
-    </Section>
+    </>
+  );
+}
+
+/** 父または母の1枚。押すとその犬のカルテへ移る */
+function KinCard({
+  role,
+  kin,
+  grand,
+  photo,
+}: {
+  role: '父' | '母';
+  kin: Kin | null;
+  grand: Map<string, string>;
+  photo: Map<string, string>;
+}) {
+  if (!kin) {
+    return (
+      <div className="rounded-xl border border-dashed border-adm-rule bg-adm-surface px-3.5 py-3">
+        <p className="text-[12.5px] text-adm-muted">
+          <b className="text-adm-ink">{role}</b> は登録されていません。
+        </p>
+      </div>
+    );
+  }
+
+  const url = photo.get(kin.id);
+  const gSire = kin.sire_id ? grand.get(kin.sire_id) : null;
+  const gDam = kin.dam_id ? grand.get(kin.dam_id) : null;
+
+  return (
+    <Link
+      href={`/admin/dogs/${kin.id}`}
+      className="tap block rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 active:bg-adm-paper"
+    >
+      <div className="flex items-start gap-3">
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt={`${kin.name} の写真`}
+            className="h-12 w-12 shrink-0 rounded-full border border-adm-rule bg-adm-paper object-cover"
+          />
+        ) : (
+          <ColorDot
+            hex={kin.coat_colors?.hex}
+            hex2={kin.coat_colors?.hex2}
+            label={kin.coat_colors?.name}
+            size={48}
+          />
+        )}
+
+        <div className="min-w-0 flex-1">
+          <p className="flex items-baseline gap-2">
+            <span className="shrink-0 rounded bg-adm-hint px-1.5 py-px text-[10.5px] font-bold text-adm-muted">
+              {role}
+            </span>
+            <span className="truncate text-[15px] font-bold text-adm-action">{kin.name}</span>
+            {kin.is_external && (
+              <span className="shrink-0 rounded border border-adm-rule px-1.5 py-px text-[10px] text-adm-muted">
+                外部
+              </span>
+            )}
+          </p>
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px] text-adm-muted">
+            <BreedChip code={kin.breed_code} hex={kin.breeds?.hex} />
+            <span>{kin.breeds?.name}</span>
+            <span className="num">{ymd(kin.birthday)}</span>
+          </p>
+        </div>
+        <span className="shrink-0 self-center text-[15px] text-adm-muted">›</span>
+      </div>
+
+      <dl className="mt-2 border-t border-adm-rule pt-2">
+        <Kv k="毛色">
+          {[kin.coat_colors?.name, kin.coat_types?.name].filter(Boolean).join('・') || '未登録'}
+        </Kv>
+        <Kv k="体重">{kin.weight_kg ? `${kin.weight_kg} kg` : '—'}</Kv>
+        <Kv k="遺伝子検査">{kin.genes?.join('・') || '—'}</Kv>
+        <Kv k="この犬の父母">
+          {gSire || gDam ? `${gSire ?? '—'} / ${gDam ?? '—'}` : <span className="text-adm-muted">未登録</span>}
+        </Kv>
+      </dl>
+    </Link>
   );
 }
 
