@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/app/_lib/supabase/server';
 import type { DeliveryMethod } from '@/app/_model/admin';
+import { draftPuppyName } from '../naming';
 
 export type SaveResult =
   | { ok: true; litterId: string; pupCount: number }
@@ -140,7 +141,7 @@ export async function createPuppies(litterId: string): Promise<SaveResult> {
       rows.push({
         breed_code: dam.breed_code,
         sex,
-        name: `${dam.name} ${circled(nth)} ${sex}${i}`,
+        name: draftPuppyName(dam.name, nth, sex, i),
         birthday: litter.birth_date,
         dam_id: litter.dam_id,
         sire_id: litter.sire_id,
@@ -197,6 +198,3 @@ export async function undoLitter(litterId: string): Promise<SaveResult> {
   if (data?.dam_id) revalidatePath(`/admin/dogs/${data.dam_id}`);
   return { ok: true, litterId, pupCount: 0 };
 }
-
-const CIRCLED = ['', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
-const circled = (n: number) => CIRCLED[n] ?? `(${n})`;

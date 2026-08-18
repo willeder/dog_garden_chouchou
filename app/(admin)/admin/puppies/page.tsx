@@ -4,6 +4,7 @@ import { ymd, ageLabel, todayJst } from '@/app/_lib/admFormat';
 import type { DogStatus } from '@/app/_model/admin';
 import { BreedBar, ColorDot } from '@/app/(admin)/_components/Marks';
 import { PUBLIC_BUCKET, publicPhotoUrl } from '@/app/_lib/supabase/storage';
+import { LitterActions } from './LitterActions';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +97,10 @@ export default async function PuppiesPage({ searchParams }: Props) {
     return bb.localeCompare(ba);
   });
 
+  // 引渡済の絞り込みで足しても、その子は「在舎」なので画面に出ず混乱する。
+  // 在舎が含まれる絞り込みのときだけ追加ボタンを出す。
+  const canAdd = filter.key === 'active' || filter.key === '在舎';
+
   const today = todayJst();
   const publishedCount = rows.filter((r) => r.is_published).length;
 
@@ -125,9 +130,18 @@ export default async function PuppiesPage({ searchParams }: Props) {
       </div>
 
       {ordered.length === 0 ? (
-        <p className="mx-4 mt-3.5 rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 text-[12.5px] leading-relaxed text-adm-muted">
-          該当する仔犬がいません。出産を記録すると、そこから仔犬を登録できます。
-        </p>
+        <div className="mx-4 mt-3.5 rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3.5">
+          <p className="text-[12.5px] leading-relaxed text-adm-muted">
+            該当する仔犬がいません。仔犬は「出産を記録」から登録します。
+            母犬・出産日・♂♀の頭数を入れると、頭数ぶんの仔犬が仮の名前で作られます。
+          </p>
+          <Link
+            href="/admin/litters/new"
+            className="tap mt-3 flex items-center justify-center rounded-xl bg-adm-action px-4 py-3 text-[14px] font-bold text-white"
+          >
+            ＋ 出産を記録する
+          </Link>
+        </div>
       ) : (
         ordered.map(([litterId, pups]) => {
           const l = litterMap.get(litterId);
@@ -178,7 +192,10 @@ export default async function PuppiesPage({ searchParams }: Props) {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[15px] font-medium">
                           {p.name}
-                          <span className="num ml-1.5 text-[12px] font-normal text-adm-muted">{p.sex}</span>
+                          {/* 仮名は末尾が「♂1」のように性別を含む。二重に出さない */}
+                          {!p.name.includes(p.sex) && (
+                            <span className="num ml-1.5 text-[12px] font-normal text-adm-muted">{p.sex}</span>
+                          )}
                         </span>
                         <span className="block truncate text-[11.5px] text-adm-muted">
                           {[
@@ -200,15 +217,30 @@ export default async function PuppiesPage({ searchParams }: Props) {
                   </li>
                 ))}
               </ul>
+
+              {canAdd && l && <LitterActions litterId={litterId} damName={l.dam_name} />}
             </section>
           );
         })
       )}
 
-      <p className="px-4 py-6 text-[11.5px] leading-relaxed text-adm-muted">
-        名前を押すとカルテが開きます。写真が入っている子は顔が出ます。
-        写真が無い子は毛色の丸と紐の色で見分けます。
-      </p>
+      {ordered.length > 0 && (
+        <p className="px-4 pb-2 pt-6 text-[11.5px] leading-relaxed text-adm-muted">
+          名前を押すとカルテが開きます。写真が入っている子は顔が出ます。
+          写真が無い子は毛色の丸と紐の色で見分けます。
+        </p>
+      )}
+
+      {/* 固定ボタンに隠れるぶんの余白 */}
+      <div className="h-24" />
+      <div className="fixed inset-x-0 bottom-[58px] z-20 mx-auto max-w-2xl px-4 pb-3">
+        <Link
+          href="/admin/litters/new"
+          className="tap flex items-center justify-center rounded-xl bg-adm-action px-4 py-3.5 text-[14.5px] font-bold text-white shadow-lg"
+        >
+          ＋ 出産を記録して仔犬を登録
+        </Link>
+      </div>
     </>
   );
 }

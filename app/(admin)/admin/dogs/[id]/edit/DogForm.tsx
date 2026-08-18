@@ -39,6 +39,7 @@ export function DogForm({
   partners,
   canChangeSex,
   sexLockReason,
+  footer,
 }: {
   dogId: string;
   breedName: string;
@@ -49,6 +50,8 @@ export function DogForm({
   partners: PartnerOption[];
   canChangeSex: boolean;
   sexLockReason?: string;
+  /** 保存バーの上に置く追加の操作（登録の取り消しなど） */
+  footer?: React.ReactNode;
 }) {
   const router = useRouter();
   const [f, setF] = useState<DogEditInput>(initial);
@@ -303,6 +306,8 @@ export function DogForm({
           <TextArea id="note" value={f.note} onChange={(v) => set('note', v)} rows={4} maxLength={2000} />
         </Row>
       </FormSection>
+
+      {footer}
 
       <SaveBar busy={busy} onSave={submit} disabled={!dirty} label={dirty ? '保存する' : '変更はありません'} />
     </>

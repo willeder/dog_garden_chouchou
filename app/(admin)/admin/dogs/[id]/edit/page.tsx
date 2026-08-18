@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/app/_lib/supabase/server';
 import { DogForm, type Master, type PartnerOption } from './DogForm';
+import { RemovePuppy } from './RemovePuppy';
 import { formatGenes, type DogEditInput } from './shared';
 import type { DogStatus } from '@/app/_model/admin';
 
@@ -29,6 +30,7 @@ type DogRow = {
   supplier_id: string | null;
   acquired_on: string | null;
   note: string | null;
+  litter_id: string | null;
   breeds: { name: string } | null;
 };
 
@@ -41,7 +43,7 @@ export default async function EditDogPage({ params }: Props) {
     .select(
       `id, name, sex, breed_code, birthday, color_code, coat_type_code, ribbon_code,
        weight_kg, microchip, genes, status, died_on, death_cause,
-       is_self_bred, breeder_id, supplier_id, acquired_on, note,
+       is_self_bred, breeder_id, supplier_id, acquired_on, note, litter_id,
        breeds ( name )`,
     )
     .eq('id', id)
@@ -51,7 +53,7 @@ export default async function EditDogPage({ params }: Props) {
   if (!dogRaw) notFound();
   const dog = dogRaw as unknown as DogRow;
 
-  const [{ data: colors }, { data: coatTypes }, { data: ribbons }, { data: partners }, { count: litterCount }] =
+  const [{ data: colors }, { data: coatTypes }, { data: ribbons }, { data: partners }, { count: litterCount }, { count: saleCount }] =
     await Promise.all([
       supabase.from('coat_colors').select('code, name, hex, hex2').order('name'),
       supabase.from('coat_types').select('code, name').order('code'),
@@ -62,6 +64,12 @@ export default async function EditDogPage({ params }: Props) {
         .from('litters')
         .select('id', { count: 'exact', head: true })
         .eq('dam_id', id)
+        .is('deleted_at', null),
+      // 引き渡した記録がある子は登録を取り消せない
+      supabase
+        .from('sales')
+        .select('id', { count: 'exact', head: true })
+        .eq('dog_id', id)
         .is('deleted_at', null),
     ]);
 
@@ -86,6 +94,10 @@ export default async function EditDogPage({ params }: Props) {
   };
 
   const hasLitters = (litterCount ?? 0) > 0;
+
+  // 取り消せるのは「出産記録から作られた仔犬」で、引渡しも死亡もしていない子だけ
+  const canRemove =
+    dog.litter_id !== null && (saleCount ?? 0) === 0 && dog.status !== '引渡済' && dog.status !== '死亡';
 
   return (
     <>
@@ -113,6 +125,7 @@ export default async function EditDogPage({ params }: Props) {
         partners={(partners ?? []) as PartnerOption[]}
         canChangeSex={!hasLitters}
         sexLockReason={hasLitters ? '出産の記録があるため変えられません' : undefined}
+        footer={canRemove ? <RemovePuppy dogId={id} dogName={dog.name} /> : null}
       />
     </>
   );
