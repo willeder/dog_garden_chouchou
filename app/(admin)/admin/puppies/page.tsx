@@ -5,10 +5,11 @@ import type { DogStatus } from '@/app/_model/admin';
 import { BreedBar, ColorDot } from '@/app/(admin)/_components/Marks';
 import { PUBLIC_BUCKET, publicPhotoUrl } from '@/app/_lib/supabase/storage';
 import { LitterActions } from './LitterActions';
+import { UnregisteredLitters, type PendingLitter } from './UnregisteredLitters';
 
 export const dynamic = 'force-dynamic';
 
-type Props = { searchParams: Promise<{ s?: string }> };
+type Props = { searchParams: Promise<{ s?: string; pending?: string }> };
 
 /**
  * 仔犬一覧。
@@ -97,6 +98,48 @@ export default async function PuppiesPage({ searchParams }: Props) {
     return bb.localeCompare(ba);
   });
 
+  // まだ1頭も登録していない出産を拾う。
+  // 移行した出産記録は頭数だけを持っているので、ここが唯一の入口になる。
+  const showAllPending = sp.pending === 'all';
+  const { data: allLittersRaw } = await supabase
+    .from('v_litters')
+    .select('id, dam_id, dam_name, birth_date, male_count, female_count, stillborn_count')
+    .order('birth_date', { ascending: false });
+
+  type LitRow = {
+    id: string; dam_id: string; dam_name: string; birth_date: string;
+    male_count: number; female_count: number; stillborn_count: number;
+  };
+  const allLitters = (allLittersRaw ?? []) as unknown as LitRow[];
+
+  // 仔犬が1頭でもいる腹は「登録済み」。取り消した子は数えない。
+  const { data: anyPupRaw } = await supabase
+    .from('dogs')
+    .select('litter_id')
+    .not('litter_id', 'is', null)
+    .is('deleted_at', null);
+  const registered = new Set(
+    ((anyPupRaw ?? []) as { litter_id: string }[]).map((d) => d.litter_id),
+  );
+
+  const damInfo = new Map<string, { breed_name: string; breed_hex: string | null }>();
+  const { data: damRaw } = await supabase
+    .from('dogs')
+    .select('id, breeds ( name, hex )')
+    .in('id', [...new Set(allLitters.map((l) => l.dam_id))].slice(0, 500));
+  for (const d of (damRaw ?? []) as unknown as { id: string; breeds: { name: string; hex: string } | null }[]) {
+    damInfo.set(d.id, { breed_name: d.breeds?.name ?? '', breed_hex: d.breeds?.hex ?? null });
+  }
+
+  const pendingAll: PendingLitter[] = allLitters
+    .filter((l) => !registered.has(l.id))
+    .map((l) => ({ ...l, ...(damInfo.get(l.dam_id) ?? { breed_name: '', breed_hex: null }) }));
+
+  // 直近6ヶ月を既定にする。3年ぶんを全部出すと、いま必要な腹が埋もれる。
+  const cutoff = shiftDays(todayJst(), -180);
+  const pendingRecent = pendingAll.filter((l) => l.birth_date >= cutoff);
+  const pending = showAllPending ? pendingAll : pendingRecent;
+
   // 引渡済の絞り込みで足しても、その子は「在舎」なので画面に出ず混乱する。
   // 在舎が含まれる絞り込みのときだけ追加ボタンを出す。
   const canAdd = filter.key === 'active' || filter.key === '在舎';
@@ -129,7 +172,16 @@ export default async function PuppiesPage({ searchParams }: Props) {
         ))}
       </div>
 
-      {ordered.length === 0 ? (
+      {canAdd && (
+        <UnregisteredLitters
+          litters={pending}
+          today={today}
+          showingAll={showAllPending}
+          hiddenCount={pendingAll.length - pendingRecent.length}
+        />
+      )}
+
+      {ordered.length === 0 && pending.length > 0 ? null : ordered.length === 0 ? (
         <div className="mx-4 mt-3.5 rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3.5">
           <p className="text-[12.5px] leading-relaxed text-adm-muted">
             該当する仔犬がいません。仔犬は「出産を記録」から登録します。
@@ -271,4 +323,12 @@ function RibbonDot({
       <ColorDot hex={colorHex} hex2={colorHex2} size={28} />
     </span>
   );
+}
+
+/** YYYY-MM-DD を日数で動かす。UTCずれを避けるため Date は使わない */
+function shiftDays(iso: string, days: number): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  const t = Date.UTC(y, m - 1, d) + days * 86400000;
+  const dt = new Date(t);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
 }
