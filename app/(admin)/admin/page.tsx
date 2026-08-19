@@ -8,6 +8,12 @@ export const dynamic = 'force-dynamic';
 
 type Props = { searchParams: Promise<{ m?: string }> };
 
+/** アラートの見出し → ワクチンの種類。交配可能・仔犬検診には記録画面が無い */
+const VACCINE_KIND: Record<string, string | undefined> = {
+  混合ワクチン: '混合',
+  狂犬病ワクチン: '狂犬病',
+};
+
 export default async function HomePage({ searchParams }: Props) {
   const sp = await searchParams;
   const today = todayJst();
@@ -56,7 +62,18 @@ export default async function HomePage({ searchParams }: Props) {
           <section key={cat} className="px-4 pt-3.5">
             <div className="mb-2 flex items-baseline justify-between gap-2">
               <h2 className="text-[13px] font-bold tracking-wide">{cat}</h2>
-              <span className="num text-[12px] text-adm-muted">{items.length}件</span>
+              <span className="flex items-baseline gap-2.5">
+                {/* ワクチンは同じ日に何頭もまとめて打つ。ここから一覧で選んで記録できる */}
+                {VACCINE_KIND[cat] && (
+                  <Link
+                    href={`/admin/vaccinations/new?kind=${encodeURIComponent(VACCINE_KIND[cat])}`}
+                    className="text-[11.5px] text-adm-action underline underline-offset-2"
+                  >
+                    まとめて記録
+                  </Link>
+                )}
+                <span className="num text-[12px] text-adm-muted">{items.length}件</span>
+              </span>
             </div>
 
             {items.length === 0 ? (

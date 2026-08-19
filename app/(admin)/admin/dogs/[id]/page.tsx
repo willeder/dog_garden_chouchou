@@ -228,7 +228,7 @@ export default async function DogPage({ params, searchParams }: Props) {
         </div>
       )}
       {tab === '血統' && <PedigreeTab dog={dog} sire={sire} dam={dam} grand={grand} photo={parentPhoto} />}
-      {tab === 'ワクチン' && <VaccineTab rows={vaccinations} due={due} />}
+      {tab === 'ワクチン' && <VaccineTab rows={vaccinations} due={due} dogId={id} />}
 
       <div className="h-6" />
     </>
@@ -563,7 +563,15 @@ function KinCard({
 
 /* ───────── ワクチン ───────── */
 
-function VaccineTab({ rows, due }: { rows: VaccinationRow[]; due: VaccineDueRow[] }) {
+function VaccineTab({
+  rows,
+  due,
+  dogId,
+}: {
+  rows: VaccinationRow[];
+  due: VaccineDueRow[];
+  dogId: string;
+}) {
   const kinds = ['混合', '狂犬病'];
   return (
     <>
@@ -586,6 +594,18 @@ function VaccineTab({ rows, due }: { rows: VaccinationRow[]; due: VaccineDueRow[
             );
           })}
         </ul>
+      </Section>
+
+      <Section title="記録する">
+        <Link
+          href={`/admin/vaccinations/new?dog=${dogId}`}
+          className="tap flex items-center justify-center rounded-xl border border-adm-rule bg-adm-surface px-4 py-3 text-[14px] font-medium text-adm-action"
+        >
+          ＋ 接種を記録する
+        </Link>
+        <p className="mt-2 text-[11.5px] leading-relaxed text-adm-muted">
+          この子が選ばれた状態で開きます。同じ日にほかの犬も打った場合は、その画面でまとめて選べます。
+        </p>
       </Section>
 
       <Section title="接種の記録" note={`${rows.length}件`}>
