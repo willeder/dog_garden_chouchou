@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ymd, todayJst } from '@/app/_lib/admFormat';
+import { Stepper } from '@/app/(admin)/_components/Form';
 import type { DeliveryMethod } from '@/app/_model/admin';
 import { saveLitter, createPuppies, undoLitter } from './actions';
 
@@ -59,6 +60,7 @@ export function LitterForm({
   const [state, setState] = useState<'edit' | 'saving' | 'saved'>('edit');
   const [error, setError] = useState('');
   const [dupWarn, setDupWarn] = useState(false);
+  const [dupLitterId, setDupLitterId] = useState<string | null>(null);
   const [saved, setSaved] = useState<{ litterId: string; pupCount: number } | null>(null);
   const [pupsMade, setPupsMade] = useState<number | null>(null);
 
@@ -106,6 +108,7 @@ export function LitterForm({
     if (!res.ok) {
       setError(res.message);
       setDupWarn(Boolean(res.duplicate));
+      setDupLitterId(res.existingLitterId ?? null);
       setState('edit');
       return;
     }
@@ -405,6 +408,14 @@ export function LitterForm({
       {error && (
         <div className="mt-3 rounded-xl border border-adm-rule bg-adm-surface p-3.5">
           <p className="text-[13px] text-adm-danger">{error}</p>
+          {dupWarn && dupLitterId && (
+            <Link
+              href={`/admin/litters/${dupLitterId}/edit`}
+              className="tap mt-2.5 flex w-full items-center justify-center rounded-xl border border-adm-rule px-4 py-2.5 text-[13px] text-adm-action"
+            >
+              すでにある記録を直す
+            </Link>
+          )}
           {dupWarn && (
             <button
               onClick={() => submit(true)}
@@ -446,75 +457,6 @@ function Field({
         {required && <span className="ml-1 text-adm-danger">必須</span>}
       </p>
       {children}
-    </div>
-  );
-}
-
-/**
- * タップで増減する数値入力。
- * 数値キーボードを出さないのが目的。現場で片手のとき、
- * キーボードが立ち上がるほど入力が止まる。
- */
-function Stepper({
-  value,
-  onChange,
-  min,
-  max,
-  prefix,
-  suffix,
-  danger,
-  allowNull,
-  isNull,
-  onNull,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  min: number;
-  max: number;
-  prefix?: string;
-  suffix?: string;
-  danger?: boolean;
-  allowNull?: boolean;
-  isNull?: boolean;
-  onNull?: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      {prefix && (
-        <span className={`w-9 shrink-0 text-[14px] ${danger ? 'text-adm-danger' : ''}`}>{prefix}</span>
-      )}
-      <button
-        onClick={() => onChange(Math.max(min, value - 1))}
-        disabled={isNull || value <= min}
-        aria-label="1減らす"
-        className="tap w-12 shrink-0 rounded-xl border border-adm-rule bg-adm-surface text-[18px] disabled:opacity-30"
-      >
-        －
-      </button>
-      <span
-        className={`num flex-1 text-center text-[19px] font-bold ${danger && value > 0 ? 'text-adm-danger' : ''}`}
-      >
-        {isNull ? '—' : value}
-        {suffix && !isNull && <span className="ml-0.5 text-[13px] font-normal">{suffix}</span>}
-      </span>
-      <button
-        onClick={() => onChange(Math.min(max, (isNull ? min : value) + 1))}
-        disabled={value >= max && !isNull}
-        aria-label="1増やす"
-        className="tap w-12 shrink-0 rounded-xl border border-adm-rule bg-adm-surface text-[18px] disabled:opacity-30"
-      >
-        ＋
-      </button>
-      {allowNull && (
-        <button
-          onClick={onNull}
-          className={`tap shrink-0 px-1 text-[11.5px] underline underline-offset-2 ${
-            isNull ? 'text-adm-action' : 'text-adm-muted'
-          }`}
-        >
-          不明
-        </button>
-      )}
     </div>
   );
 }

@@ -357,12 +357,21 @@ function LittersTab({ litters, sex }: { litters: LitterRow[]; sex: string }) {
                 i === 0 ? 'border-adm-action' : 'border-[#B9BDB6]'
               }`}
             />
-            <p className="num text-[14px] font-bold leading-tight">
-              {ymd(l.birth_date)}
-              <span className="ml-2 rounded border border-adm-rule bg-adm-paper px-1.5 py-px align-middle text-[10.5px] font-normal text-adm-muted">
-                {n - i}回目
-              </span>
-            </p>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="num text-[14px] font-bold leading-tight">
+                {ymd(l.birth_date)}
+                <span className="ml-2 rounded border border-adm-rule bg-adm-paper px-1.5 py-px align-middle text-[10.5px] font-normal text-adm-muted">
+                  {n - i}回目
+                </span>
+              </p>
+              {/* 出産日・父・頭数の打ち間違いはここから直す */}
+              <Link
+                href={`/admin/litters/${l.id}/edit`}
+                className="tap shrink-0 text-[12px] text-adm-action underline underline-offset-2"
+              >
+                直す
+              </Link>
+            </div>
 
             <div className="mt-1.5 rounded-xl border border-adm-rule bg-adm-surface px-3 py-2.5">
               <Kv k="父">

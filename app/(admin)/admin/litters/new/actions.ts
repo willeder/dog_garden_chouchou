@@ -7,7 +7,7 @@ import { draftPuppyName } from '../naming';
 
 export type SaveResult =
   | { ok: true; litterId: string; pupCount: number }
-  | { ok: false; message: string; duplicate?: boolean };
+  | { ok: false; message: string; duplicate?: boolean; existingLitterId?: string };
 
 export type LitterInput = {
   damId: string;
@@ -50,6 +50,7 @@ export async function saveLitter(input: LitterInput): Promise<SaveResult> {
       return {
         ok: false,
         duplicate: true,
+        existingLitterId: dup.id,
         message: 'この母犬には同じ出産日の記録がすでにあります。',
       };
     }
@@ -74,9 +75,18 @@ export async function saveLitter(input: LitterInput): Promise<SaveResult> {
   if (error) {
     // 部分一意索引に当たった場合（allowDuplicate でも通らない）
     if (error.code === '23505' || error.message.includes('litters_dam_birth_uniq')) {
+      // どの記録とぶつかったかを返す。画面からその編集へ飛べるようにするため。
+      const { data: existing } = await supabase
+        .from('litters')
+        .select('id')
+        .eq('dam_id', input.damId)
+        .eq('birth_date', input.birthDate)
+        .is('deleted_at', null)
+        .maybeSingle();
       return {
         ok: false,
         duplicate: true,
+        existingLitterId: existing?.id,
         message: '同じ母犬・同じ出産日の記録は1件までです。既存の記録を編集してください。',
       };
     }

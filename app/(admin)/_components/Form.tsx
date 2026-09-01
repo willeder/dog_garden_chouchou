@@ -320,3 +320,83 @@ export function Notice({ kind, children }: { kind: 'error' | 'ok'; children: Rea
     </p>
   );
 }
+
+/**
+ * タップで増減する数値入力。
+ * 数値キーボードを出さないのが目的。現場で片手のとき、
+ * キーボードが立ち上がるほど入力が止まる。
+ *
+ * 出産の記録と編集で同じものを使う。頭数や妊娠日数の入れ方が
+ * 画面ごとに変わると、打ち間違いの出方も変わってしまう。
+ */
+export function Stepper({
+  value,
+  onChange,
+  min,
+  max,
+  prefix,
+  suffix,
+  danger,
+  allowNull,
+  isNull,
+  onNull,
+  disabled,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  min: number;
+  max: number;
+  prefix?: string;
+  suffix?: string;
+  danger?: boolean;
+  allowNull?: boolean;
+  isNull?: boolean;
+  onNull?: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      {prefix && (
+        <span className={`w-9 shrink-0 text-[14px] ${danger ? 'text-adm-danger' : ''}`}>{prefix}</span>
+      )}
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(min, value - 1))}
+        disabled={disabled || isNull || value <= min}
+        aria-label="1減らす"
+        className="tap w-12 shrink-0 rounded-xl border border-adm-rule bg-adm-surface text-[18px] disabled:opacity-30"
+      >
+        －
+      </button>
+      <span
+        className={`num flex-1 text-center text-[19px] font-bold ${danger && value > 0 ? 'text-adm-danger' : ''} ${
+          disabled ? 'text-adm-muted' : ''
+        }`}
+      >
+        {isNull ? '—' : value}
+        {suffix && !isNull && <span className="ml-0.5 text-[13px] font-normal">{suffix}</span>}
+      </span>
+      <button
+        type="button"
+        onClick={() => onChange(Math.min(max, (isNull ? min : value) + 1))}
+        disabled={disabled || (value >= max && !isNull)}
+        aria-label="1増やす"
+        className="tap w-12 shrink-0 rounded-xl border border-adm-rule bg-adm-surface text-[18px] disabled:opacity-30"
+      >
+        ＋
+      </button>
+      {allowNull && (
+        <button
+          type="button"
+          onClick={onNull}
+          disabled={disabled}
+          className={`tap shrink-0 px-1 text-[11.5px] underline underline-offset-2 disabled:opacity-40 ${
+            isNull ? 'text-adm-action' : 'text-adm-muted'
+          }`}
+        >
+          不明
+        </button>
+      )}
+    </div>
+  );
+}
