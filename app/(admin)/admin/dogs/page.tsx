@@ -8,7 +8,7 @@ import { SearchBox } from './SearchBox';
 
 export const dynamic = 'force-dynamic';
 
-type Props = { searchParams: Promise<{ q?: string; breed?: string; g?: string }> };
+type Props = { searchParams: Promise<{ q?: string; breed?: string; g?: string; sort?: string; dir?: string }> };
 
 const GROUPS = [
   { key: 'dam', label: '♀ 母犬' },
@@ -19,11 +19,60 @@ const GROUPS = [
   { key: 'external', label: '外交配' },
 ] as const;
 
+/**
+ * 並び替え。
+ *
+ * 探し方は日によって変わる（次に使う若い犬を見る日、退役を考える日、名前で引く日）。
+ * 既定は誕生日順。選んでいるチップをもう一度押すと向きが返る。
+ */
+const SORTS = [
+  { key: 'birthday', label: '誕生日' },
+  { key: 'litters', label: '出産回数' },
+  { key: 'lastBirth', label: '最終出産' },
+  { key: 'name', label: '名前' },
+] as const;
+
+type SortKey = (typeof SORTS)[number]['key'];
+
+const DEFAULT_SORT: SortKey = 'birthday';
+
+/** 最初に押したときの向き。降順が自然なものと昇順が自然なものがある */
+const DEFAULT_DESC: Record<SortKey, boolean> = {
+  birthday: true,
+  litters: true,
+  lastBirth: true,
+  name: false,
+};
+
+/** 「降順」では現場に伝わらない。その並びが何順なのかを書く */
+function dirLabel(key: SortKey, desc: boolean): string {
+  if (key === 'birthday') return desc ? '若い順' : '年長順';
+  if (key === 'litters') return desc ? '多い順' : '少ない順';
+  if (key === 'lastBirth') return desc ? '新しい順' : '古い順';
+  return desc ? 'ん→あ' : 'あ→ん';
+}
+
+/** 並べ替えの対象が空か。空の犬は向きに関わらず最後に置く */
+function isBlank(d: DogListItem, key: SortKey): boolean {
+  if (key === 'birthday') return !d.birthday;
+  if (key === 'lastBirth') return !d.last_birth_date;
+  return false;
+}
+
+function compare(a: DogListItem, b: DogListItem, key: SortKey): number {
+  if (key === 'birthday') return (a.birthday ?? '').localeCompare(b.birthday ?? '');
+  if (key === 'litters') return a.litter_count - b.litter_count;
+  if (key === 'lastBirth') return (a.last_birth_date ?? '').localeCompare(b.last_birth_date ?? '');
+  return a.name.localeCompare(b.name, 'ja');
+}
+
 export default async function DogsPage({ searchParams }: Props) {
   const sp = await searchParams;
   const q = (sp.q ?? '').trim();
   const breed = sp.breed ?? 'all';
   const group = (GROUPS.find((g) => g.key === sp.g)?.key ?? 'dam') as (typeof GROUPS)[number]['key'];
+  const sort = (SORTS.find((s) => s.key === sp.sort)?.key ?? DEFAULT_SORT) as SortKey;
+  const desc = sp.dir === 'asc' ? false : sp.dir === 'desc' ? true : DEFAULT_DESC[sort];
 
   const supabase = await createClient();
 
@@ -94,8 +143,15 @@ export default async function DogsPage({ searchParams }: Props) {
     };
   });
 
-  // 出産回数の多い順。よく開く犬が上に来る。
-  items.sort((a, b) => b.litter_count - a.litter_count || a.name.localeCompare(b.name, 'ja'));
+  items.sort((a, b) => {
+    // 誕生日や最終出産が未入力の犬は、どちらの向きでも最後に置く。
+    // 向きを変えるたびに先頭へ来ると、探している犬が毎回押し出される。
+    const ba = isBlank(a, sort);
+    const bb = isBlank(b, sort);
+    if (ba !== bb) return ba ? 1 : -1;
+    const c = compare(a, b, sort);
+    return (desc ? -c : c) || a.name.localeCompare(b.name, 'ja');
+  });
 
   const breedCounts = new Map<string, number>();
   for (const d of dogs) breedCounts.set(d.breed_code, (breedCounts.get(d.breed_code) ?? 0) + 1);
@@ -126,15 +182,17 @@ export default async function DogsPage({ searchParams }: Props) {
           ]}
           active={breed}
           param="breed"
-          keep={{ q, g: group }}
+          keep={{ q, g: group, sort, dir: desc ? 'desc' : 'asc' }}
         />
 
         <Chips
           items={GROUPS.map((g) => ({ key: g.key, label: g.label }))}
           active={group}
           param="g"
-          keep={{ q, breed }}
+          keep={{ q, breed, sort, dir: desc ? 'desc' : 'asc' }}
         />
+
+        <SortChips active={sort} desc={desc} keep={{ q, breed, g: group }} />
       </div>
 
       <div className="px-4 pt-3.5">
@@ -210,6 +268,53 @@ export default async function DogsPage({ searchParams }: Props) {
 
       <div className="h-6" />
     </>
+  );
+}
+
+/**
+ * 並び替えのチップ。
+ * 選んでいるものをもう一度押すと向きが返る。行を増やさずに両方向を出せる。
+ */
+function SortChips({
+  active,
+  desc,
+  keep,
+}: {
+  active: SortKey;
+  desc: boolean;
+  keep: Record<string, string>;
+}) {
+  return (
+    <div className="-mx-4 flex items-center gap-1.5 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <span className="shrink-0 text-[11.5px] text-adm-muted">並び</span>
+      {SORTS.map((s) => {
+        const on = active === s.key;
+        // 押しているものは向きを返す。ほかはその並びの既定の向きで開く
+        const nextDesc = on ? !desc : DEFAULT_DESC[s.key];
+        const params = new URLSearchParams();
+        for (const [k, v] of Object.entries(keep)) if (v && v !== 'all') params.set(k, v);
+        if (s.key !== DEFAULT_SORT || nextDesc !== DEFAULT_DESC[DEFAULT_SORT]) {
+          params.set('sort', s.key);
+          params.set('dir', nextDesc ? 'desc' : 'asc');
+        }
+        return (
+          <Link
+            key={s.key}
+            href={`/admin/dogs${params.size ? `?${params}` : ''}`}
+            scroll={false}
+            aria-label={on ? `${s.label} ${dirLabel(s.key, desc)}。押すと向きが返ります` : `${s.label}で並べる`}
+            className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[12.5px] leading-6 ${
+              on
+                ? 'border-adm-action bg-adm-hint font-medium text-adm-action'
+                : 'border-adm-rule bg-adm-surface text-adm-muted'
+            }`}
+          >
+            {s.label}
+            {on && <span className="ml-1 text-[11px]">{dirLabel(s.key, desc)}</span>}
+          </Link>
+        );
+      })}
+    </div>
   );
 }
 
