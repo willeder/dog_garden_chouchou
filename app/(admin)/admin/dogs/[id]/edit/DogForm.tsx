@@ -23,6 +23,7 @@ import {
   normalizeChip,
   validateDog,
   type DogEditInput,
+  type SaveDogResult,
 } from './shared';
 import type { DogStatus } from '@/app/_model/admin';
 
@@ -39,9 +40,14 @@ export function DogForm({
   partners,
   canChangeSex,
   sexLockReason,
+  head,
   footer,
+  onSave,
+  showLedger = true,
+  saveLabel = '保存する',
 }: {
-  dogId: string;
+  /** 編集対象。新規登録のときは無い */
+  dogId?: string;
   breedName: string;
   initial: DogEditInput;
   colors: Master[];
@@ -50,8 +56,18 @@ export function DogForm({
   partners: PartnerOption[];
   canChangeSex: boolean;
   sexLockReason?: string;
+  /** 「基本」の上に置く欄（新規登録の犬種選びなど） */
+  head?: React.ReactNode;
   /** 保存バーの上に置く追加の操作（登録の取り消しなど） */
   footer?: React.ReactNode;
+  /**
+   * 保存の処理を差し替える。新規登録は insert なので編集の saveDog とは別。
+   * 検証は画面側で validateDog を通したうえで呼ぶ。追加の検証は呼び先で行う。
+   */
+  onSave?: (input: DogEditInput) => Promise<SaveDogResult>;
+  /** 帳簿の項目を出すか。外交配の種雄犬は自舎の所有ではないので出さない */
+  showLedger?: boolean;
+  saveLabel?: string;
 }) {
   const router = useRouter();
   const [f, setF] = useState<DogEditInput>(initial);
@@ -75,7 +91,11 @@ export function DogForm({
       return;
     }
     setBusy(true);
-    const res = await saveDog(dogId, f);
+    const res: SaveDogResult = onSave
+      ? await onSave(f)
+      : dogId
+        ? await saveDog(dogId, f)
+        : { ok: false, message: '保存先が特定できませんでした。' };
     setBusy(false);
     if (!res.ok) {
       setError(res.message);
@@ -84,13 +104,16 @@ export function DogForm({
     }
     // 保存できたら個体カードへ戻る。保存後に同じ画面に留まると
     // 「保存されたのか」が分からず二度押しになる
-    router.push(`/admin/dogs/${dogId}`);
+    const to = res.id ?? dogId;
+    router.push(to ? `/admin/dogs/${to}` : '/admin/dogs');
     router.refresh();
   }
 
   return (
     <>
       {error && <Notice kind="error">{error}</Notice>}
+
+      {head}
 
       <FormSection title="基本" note={breedName}>
         <Row label="名前" htmlFor="name" required>
@@ -233,6 +256,7 @@ export function DogForm({
         )}
       </FormSection>
 
+      {showLedger && (
       <FormSection
         title="帳簿の項目"
         note="法令"
@@ -300,6 +324,7 @@ export function DogForm({
           </>
         )}
       </FormSection>
+      )}
 
       <FormSection title="メモ" note="犬舎内だけに残ります">
         <Row label="メモ" htmlFor="note">
@@ -309,7 +334,7 @@ export function DogForm({
 
       {footer}
 
-      <SaveBar busy={busy} onSave={submit} disabled={!dirty} label={dirty ? '保存する' : '変更はありません'} />
+      <SaveBar busy={busy} onSave={submit} disabled={!dirty} label={dirty ? saveLabel : '変更はありません'} />
     </>
   );
 }

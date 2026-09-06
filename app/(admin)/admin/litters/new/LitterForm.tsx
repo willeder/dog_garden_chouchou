@@ -339,6 +339,11 @@ export function LitterForm({
             <p className="mt-1.5 text-[11.5px] leading-relaxed text-adm-muted">
               一覧から選びます。手入力にすると、いまの台帳と同じ表記のばらつきが起きます。
               分からない場合は空のままで保存できます。
+              他犬舎の種雄犬が一覧にないときは
+              <Link href="/admin/dogs/new?external=1" className="mx-0.5 text-adm-action underline underline-offset-2">
+                外交配の種雄犬を登録
+              </Link>
+              してから選びます。
             </p>
           </>
         )}

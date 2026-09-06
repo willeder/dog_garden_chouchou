@@ -28,7 +28,38 @@ export type DogEditInput = {
   note: string;
 };
 
-export type SaveDogResult = { ok: true } | { ok: false; message: string; field?: keyof DogEditInput };
+/** 新規登録のときは作った犬の id が返る。編集では付かない */
+export type SaveDogResult =
+  | { ok: true; id?: string }
+  | { ok: false; message: string; field?: keyof DogNewInput };
+
+/** 新しく犬を登録するときだけ要る項目。犬種は登録後に変えられないので編集入力には無い */
+export type DogNewInput = DogEditInput & {
+  breed_code: string;
+  /** 他犬舎の種雄犬（外交配の相手）。自舎の所有ではないので帳簿・定期報告の対象外 */
+  is_external: boolean;
+};
+
+/** 入力欄の初期値。親犬の登録が主用途なので状態は「在籍」から始める */
+export const EMPTY_DOG: DogEditInput = {
+  name: '',
+  sex: '♀',
+  birthday: '',
+  color_code: '',
+  coat_type_code: '',
+  ribbon_code: '',
+  weight_kg: '',
+  microchip: '',
+  genes: '',
+  status: '在籍',
+  died_on: '',
+  death_cause: '',
+  is_self_bred: false,
+  breeder_id: '',
+  supplier_id: '',
+  acquired_on: '',
+  note: '',
+};
 
 export const DOG_STATUSES: DogStatus[] = [
   '在舎',
@@ -148,6 +179,20 @@ export function validateDog(input: DogEditInput): { message: string; field?: key
   // 未入力であることは個体カードの「帳簿の項目」で赤く出る。
 
   return null;
+}
+
+/**
+ * 新規登録の検証。編集と同じ検証に、登録時だけの項目を足す。
+ */
+export function validateNewDog(input: DogNewInput): { message: string; field?: keyof DogNewInput } | null {
+  if (!input.breed_code) return { message: '犬種を選んでください。', field: 'breed_code' };
+  if (input.is_external && input.sex !== '♂') {
+    return { message: '外交配の相手として登録できるのは種雄犬（♂）だけです。', field: 'is_external' };
+  }
+  if (input.is_external && input.is_self_bred) {
+    return { message: '外交配の種雄犬は自家繁殖にできません。', field: 'is_self_bred' };
+  }
+  return validateDog(input);
 }
 
 /** 自家繁殖のときの所有日は誕生日。法令上そう扱う */

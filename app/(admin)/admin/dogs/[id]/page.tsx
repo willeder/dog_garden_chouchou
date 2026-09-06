@@ -5,6 +5,7 @@ import { ymd, ym, chip, ageLabel, todayJst } from '@/app/_lib/admFormat';
 import type { DogDetail, LitterRow, VaccinationRow, VaccineDueRow } from '@/app/_model/admin';
 import { BreedChip, ColorDot } from '@/app/(admin)/_components/Marks';
 import { PhotoManager, type PhotoItem } from './PhotoManager';
+import { PromoteToParent } from './PromoteToParent';
 import { PRIVATE_BUCKET, PUBLIC_BUCKET, publicPhotoUrl } from '@/app/_lib/supabase/storage';
 
 export const dynamic = 'force-dynamic';
@@ -283,6 +284,12 @@ function BasicTab({ dog }: { dog: DogDetail }) {
               <span className="ml-1.5">›</span>
             </span>
           </Link>
+        </Section>
+      )}
+
+      {(['在舎', '商談中', '売約'] as string[]).includes(dog.status) && !dog.is_external && (
+        <Section title="親犬にする">
+          <PromoteToParent dogId={dog.id} dogName={dog.name} sex={dog.sex} isPublished={dog.is_published} />
         </Section>
       )}
 

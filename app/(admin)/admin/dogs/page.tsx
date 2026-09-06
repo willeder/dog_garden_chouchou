@@ -14,6 +14,9 @@ const GROUPS = [
   { key: 'dam', label: '♀ 母犬' },
   { key: 'sire', label: '♂ 種雄犬' },
   { key: 'retired', label: '退役' },
+  // 他犬舎の種雄犬。自舎の所有ではないので普段は出さないが、
+  // 登録した犬を後から探せないと困るのでここに置く
+  { key: 'external', label: '外交配' },
 ] as const;
 
 export default async function DogsPage({ searchParams }: Props) {
@@ -33,7 +36,7 @@ export default async function DogsPage({ searchParams }: Props) {
        coat_colors ( code, name, hex, hex2 )`,
     )
     .is('deleted_at', null)
-    .eq('is_external', false);
+    .eq('is_external', group === 'external');
 
   if (group === 'dam') query = query.eq('sex', '♀').in('status', ['在籍', '預託']);
   if (group === 'sire') query = query.eq('sex', '♂').in('status', ['在籍', '預託']);
@@ -99,9 +102,18 @@ export default async function DogsPage({ searchParams }: Props) {
 
   return (
     <>
-      <header className="sticky top-0 z-20 border-b border-adm-rule bg-adm-surface px-4 pb-2.5 pt-3">
-        <h1 className="text-[17px] font-bold tracking-tight">犬</h1>
-        <p className="num text-[11.5px] text-adm-muted">{items.length}頭</p>
+      <header className="sticky top-0 z-20 flex items-center gap-2.5 border-b border-adm-rule bg-adm-surface px-4 pb-2.5 pt-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-[17px] font-bold tracking-tight">犬</h1>
+          <p className="num text-[11.5px] text-adm-muted">{items.length}頭</p>
+        </div>
+        {/* 外から迎えた親犬・外交配の種雄犬。この犬舎で産まれた子は出産記録から */}
+        <Link
+          href="/admin/dogs/new"
+          className="tap flex shrink-0 items-center rounded-lg border border-adm-rule px-3 text-[13px] font-medium text-adm-action"
+        >
+          ＋ 登録
+        </Link>
       </header>
 
       <div className="flex flex-col gap-2 px-4 pt-2.5">
@@ -131,8 +143,19 @@ export default async function DogsPage({ searchParams }: Props) {
             読み込めませんでした。通信を確認してもう一度お試しください。
           </p>
         ) : items.length === 0 ? (
-          <p className="rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 text-[12.5px] text-adm-muted">
-            {q ? `「${q}」に一致する犬はいません` : '該当なし'}
+          <p className="rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 text-[12.5px] leading-relaxed text-adm-muted">
+            {q ? (
+              `「${q}」に一致する犬はいません`
+            ) : group === 'external' ? (
+              <>
+                外交配の種雄犬はまだ登録されていません。
+                <Link href="/admin/dogs/new?external=1" className="ml-1 text-adm-action underline underline-offset-2">
+                  登録する
+                </Link>
+              </>
+            ) : (
+              '該当なし'
+            )}
           </p>
         ) : (
           <ul className="overflow-hidden rounded-xl border border-adm-rule bg-adm-surface">

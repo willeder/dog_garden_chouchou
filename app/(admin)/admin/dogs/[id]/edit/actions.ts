@@ -11,6 +11,7 @@ import {
   type DogEditInput,
   type SaveDogResult,
 } from './shared';
+import { chipConflict } from './chipConflict';
 
 /**
  * 犬の内容を書き換える。
@@ -64,21 +65,8 @@ export async function saveDog(id: string, input: DogEditInput): Promise<SaveDogR
 
   if (error) {
     // マイクロチップは全頭で重複できない。どの犬が持っているかを出す
-    if (error.code === '23505' && error.message.includes('microchip')) {
-      const { data: owner } = await supabase
-        .from('dogs')
-        .select('name')
-        .eq('microchip', chip)
-        .is('deleted_at', null)
-        .maybeSingle();
-      return {
-        ok: false,
-        field: 'microchip',
-        message: owner
-          ? `このマイクロチップ番号は「${owner.name}」に登録されています。読み取り直して確認してください。`
-          : 'このマイクロチップ番号はほかの犬に登録されています。',
-      };
-    }
+    const conflict = await chipConflict(supabase, error, chip);
+    if (conflict) return conflict;
     return { ok: false, message: `保存できませんでした: ${error.message}` };
   }
   if (!data) return { ok: false, message: '対象の犬が見つかりませんでした。' };
@@ -94,4 +82,57 @@ export async function saveDog(id: string, input: DogEditInput): Promise<SaveDogR
   }
 
   return { ok: true };
+}
+
+/** 仔犬から親犬に上げられる状態。引渡済・死亡の子は上げない */
+const PROMOTABLE = ['在舎', '商談中', '売約'] as const;
+
+/**
+ * 仔犬を親犬（在籍）にする。
+ *
+ * 自家繁殖の子を繁殖に残すときの操作。編集画面で状態を「在籍」に変えるのと
+ * 同じだが、現場では「この子を残す」と決めた瞬間に1回で済ませたい。
+ * サイトに出ている子は公開を止める（公開ビューは販売中の状態しか出さないので、
+ * スイッチだけ残ると「公開なのに出ない」になる）。
+ */
+export async function promoteToParent(id: string): Promise<SaveDogResult> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return { ok: false, message: '対象の犬が特定できませんでした。' };
+
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+
+  const { data: dog } = await supabase
+    .from('dogs')
+    .select('id, name, status, is_external')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .maybeSingle();
+  if (!dog) return { ok: false, message: '対象の犬が見つかりませんでした。' };
+  if (dog.is_external) return { ok: false, message: '外交配の種雄犬は親犬にできません。' };
+  if (!(PROMOTABLE as readonly string[]).includes(dog.status)) {
+    return {
+      ok: false,
+      message:
+        dog.status === '在籍'
+          ? `${dog.name} はすでに親犬（在籍）です。`
+          : `状態が「${dog.status}」の犬は親犬にできません。`,
+    };
+  }
+
+  const { error } = await supabase
+    .from('dogs')
+    .update({ status: '在籍', is_published: false, updated_by: auth.user?.id ?? null })
+    .eq('id', id)
+    .is('deleted_at', null);
+  if (error) return { ok: false, message: `変更できませんでした: ${error.message}` };
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/dogs');
+  revalidatePath('/admin/puppies');
+  revalidatePath(`/admin/dogs/${id}`);
+  revalidatePath('/admin/litters/new');
+  revalidatePath('/puppies');
+  revalidatePath(`/puppies/${id}`);
+
+  return { ok: true, id };
 }
