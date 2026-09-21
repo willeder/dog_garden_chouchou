@@ -40,7 +40,7 @@ export function SearchBox({ initial }: { initial: string }) {
         inputMode="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="名前 / チップ下4桁"
+        placeholder="名前 / チップ下4桁 / お問い合わせ番号"
         aria-label="名前またはマイクロチップ番号で検索"
         className="num tap w-full bg-transparent text-[16px] outline-none placeholder:font-adm placeholder:text-[14px] placeholder:text-[#A6A9A4]"
       />

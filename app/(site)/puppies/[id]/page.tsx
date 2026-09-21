@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import SectionHeading from "@/app/_common/ui/SectionHeading";
 import FadeInSection from "@/app/_common/FadeInSection";
 import PhotoGallery from "@/app/_common/PhotoGallery";
-import TrackedButton from "@/app/_common/ui/TrackedButton";
 import BackLink from "@/app/_layout/back";
 import { ContactSection } from "@/app/_components/contact";
 import { getPuppies, getPuppy } from "@/app/_api/puppies/get";
@@ -17,6 +16,11 @@ import PuppySpec from "./_components/PuppySpec";
 import BreederMessage from "./_components/BreederMessage";
 import Parents from "./_components/Parents";
 import PuppyViewTracker from "./_components/PuppyViewTracker";
+import LineInquiry from "./_components/LineInquiry";
+import { inquiryCode, lineMessageUrl } from "@/app/_lib/inquiry";
+import { absoluteUrl } from "@/app/_config/site";
+import { kennelInfo } from "@/app/_data/kennelInfo";
+import { formatPrice } from "@/app/_lib/format";
 
 // ISR: 1時間ごとに再生成（app/_config/isr.ts の defaultRevalidateTime と同値）
 export const revalidate = 3600;
@@ -50,6 +54,23 @@ export default async function PuppyDetailPage({ params }: PageProps) {
   const puppy = await getPuppy(id);
 
   if (!puppy) notFound();
+
+  // LINEで送る文面。犬舎側がどの子の問い合わせかをすぐ特定できるよう、番号とURLを必ず入れる
+  const code = inquiryCode(puppy.id);
+  const inquiryMessage = [
+    "【仔犬のお問い合わせ】",
+    `お問い合わせ番号：${code}`,
+    `${puppy.breed}（${puppy.sex}）${formatBirthday(puppy.birthday)}`,
+    puppy.status !== "成約済み" ? `価格：${formatPrice(puppy.price)}` : null,
+    absoluteUrl(`/puppies/${puppy.id}`),
+    "",
+    "この子について（見学希望・ご質問など）：",
+    "",
+  ]
+    .filter((l) => l !== null)
+    .join("\n");
+  const lineUrl = lineMessageUrl(inquiryMessage);
+  const lineFallback = kennelInfo.sns.line?.url || "/contact";
 
   return (
     <>
@@ -91,7 +112,7 @@ export default async function PuppyDetailPage({ params }: PageProps) {
             <h1 className="mt-2 font-jp text-[20px] font-extrabold leading-[1.5] text-ink-light md:text-[24px]">
               {puppy.breed}
               <span className="ml-2 font-jp text-[13px] font-medium text-ink-light md:text-[14px]">
-                （お問い合わせ番号: {puppy.id}）
+                （お問い合わせ番号: {code}）
               </span>
             </h1>
           </div>
@@ -116,17 +137,14 @@ export default async function PuppyDetailPage({ params }: PageProps) {
               <p className="font-jp text-[14px] leading-[1.6] text-ink-light md:text-[15px]">
                 この子の見学・ご相談は公式LINEにて承っております
               </p>
-              <TrackedButton
-                href="/contact"
-                kind="cta"
+              <LineInquiry
+                puppyId={puppy.id}
+                code={code}
+                lineUrl={lineUrl}
+                message={inquiryMessage}
+                fallbackUrl={lineFallback}
                 location="puppy_detail"
-                label="LINEで見学予約・お問い合わせ"
-                variant="green"
-                font="jp"
-                className="w-full"
-              >
-                LINEで見学予約・お問い合わせ
-              </TrackedButton>
+              />
             </div>
 
             {/* メッセージ未入力の子は、見出しだけのカードが残らないよう非表示にする */}
@@ -144,6 +162,20 @@ export default async function PuppyDetailPage({ params }: PageProps) {
       </section>
 
       <ContactSection location="puppy_detail_bottom" />
+
+      {/* スマホではページのどこからでも問い合わせられるよう、画面下に固定する */}
+      <div className="h-20 md:hidden" aria-hidden />
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-pink bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur md:hidden">
+        <LineInquiry
+          puppyId={puppy.id}
+          code={code}
+          lineUrl={lineUrl}
+          message={inquiryMessage}
+          fallbackUrl={lineFallback}
+          location="puppy_detail_sticky"
+          compact
+        />
+      </div>
       <BackLink href="/puppies" />
     </>
   );

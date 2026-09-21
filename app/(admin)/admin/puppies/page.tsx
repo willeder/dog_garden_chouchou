@@ -182,7 +182,7 @@ export default async function PuppiesPage({ searchParams }: Props) {
           type="search"
           name="q"
           inputMode="search"
-          placeholder="名前 / チップ下4桁で探す"
+          placeholder="名前 / チップ / お問い合わせ番号で探す"
           aria-label="仔犬を探す"
           className="num tap w-full rounded-lg border border-adm-rule bg-adm-surface px-3 py-2 text-[16px] outline-none placeholder:font-adm placeholder:text-[14px] placeholder:text-[#A6A9A4] focus:border-adm-action"
         />

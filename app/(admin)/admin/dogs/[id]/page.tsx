@@ -9,6 +9,7 @@ import { VideoManager } from './VideoManager';
 import { QuickStatus } from './QuickStatus';
 import { VaccinationItem } from './VaccinationItem';
 import { safeFrom, withFrom } from '@/app/_lib/adminNav';
+import { inquiryCode } from '@/app/_lib/inquiry';
 import { PromoteToParent } from './PromoteToParent';
 import { PRIVATE_BUCKET, PUBLIC_BUCKET, publicPhotoUrl, publicVideoUrl } from '@/app/_lib/supabase/storage';
 
@@ -330,7 +331,7 @@ function BasicTab({
       </Section>
 
       {(['在舎', '商談中', '売約'] as string[]).includes(dog.status) && (
-        <Section title="公式サイト">
+        <Section title="公式サイト" note={`お問い合わせ番号 ${inquiryCode(dog.id)}`}>
           <Link
             href={withFrom(`/admin/dogs/${dog.id}/publish`, self)}
             className="tap flex items-center justify-between gap-3 rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 active:bg-adm-paper"

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { withFrom } from '@/app/_lib/adminNav';
+import { isInquiryCode } from '@/app/_lib/inquiry';
 import { createClient } from '@/app/_lib/supabase/server';
 import { ymd } from '@/app/_lib/admFormat';
 import type { Breed, DogListRow, DogListItem, DogStatus } from '@/app/_model/admin';
@@ -117,6 +118,11 @@ export default async function DogsPage({ searchParams }: Props) {
     const safe = q.replace(/[,()*%\\]/g, ' ').trim();
     const conds = [`name.ilike.%${safe}%`];
     if (digits) conds.push(`microchip.ilike.%${digits}%`);
+    // 公式サイトの「お問い合わせ番号」（IDの先頭8文字）。LINEで届いた番号から、その子を引けるようにする
+    if (isInquiryCode(q)) {
+      const p = q.trim().toLowerCase();
+      conds.push(`and(id.gte.${p}-0000-0000-0000-000000000000,id.lte.${p}-ffff-ffff-ffff-ffffffffffff)`);
+    }
     query = query.or(conds.join(','));
   }
 

@@ -80,8 +80,9 @@ export const kennelInfo: KennelInfo = {
     tiktok: "https://www.tiktok.com/@d.g_chouchou",
     line: {
       url: "https://lin.ee/ZBfUumi",
-      // TODO: LINE ID（@から始まる）が分かれば設定すると友だち追加ボタンの下に表示される
-      id: "",
+      // lin.ee/ZBfUumi の転送先（line.me/R/ti/p/@753thdew）から確認した公式アカウントのID。
+      // 仔犬ページの「この子についてLINEで問い合わせる」で、メッセージ入力済みのトークを開くのに使う
+      id: "@753thdew",
       // TODO: 友だち追加用QRコード画像を public/assets/ に置いてパスを設定するとPC向けQRブロックが表示される
       qrImage: "",
     },
