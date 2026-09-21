@@ -88,14 +88,17 @@ function Card({ l, today }: { l: PendingLitter; today: string }) {
   const alive = l.male_count + l.female_count;
 
   async function run() {
+    if (busy) return;
     setBusy(true);
     setErr('');
     const res = await createPuppies(l.id);
-    setBusy(false);
     if (!res.ok) {
+      setBusy(false);
       setErr(res.message);
       return;
     }
+    // 成功後は busy を戻さない。画面の再読み込みが終わるまでカードが残るため、
+    // ここでボタンを押せる状態に戻すと二重登録になる。カードは再読み込みで消える。
     startTransition(() => router.refresh());
   }
 

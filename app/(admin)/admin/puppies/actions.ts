@@ -148,11 +148,20 @@ export async function removePuppy(dogId: string): Promise<PuppyResult> {
       .maybeSingle();
     if (litter) {
       damId = litter.dam_id;
-      const patch =
-        dog.sex === '♂'
-          ? { male_count: Math.max(0, litter.male_count - 1) }
-          : { female_count: Math.max(0, litter.female_count - 1) };
-      await supabase.from('litters').update(patch).eq('id', litter.id);
+      // 重複して作られた仔犬を消すときは頭数を減らさない。
+      // 残った同性の仔犬が記録上の頭数以上いれば、消したのは余分な1頭とみなす。
+      const { count: remaining } = await supabase
+        .from('dogs')
+        .select('id', { count: 'exact', head: true })
+        .eq('litter_id', litter.id)
+        .eq('sex', dog.sex)
+        .is('deleted_at', null);
+      const current = dog.sex === '♂' ? litter.male_count : litter.female_count;
+      if ((remaining ?? 0) < current) {
+        const next = Math.max(0, current - 1);
+        const patch = dog.sex === '♂' ? { male_count: next } : { female_count: next };
+        await supabase.from('litters').update(patch).eq('id', litter.id);
+      }
     }
   }
 

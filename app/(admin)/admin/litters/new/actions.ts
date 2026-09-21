@@ -117,6 +117,20 @@ export async function createPuppies(litterId: string): Promise<SaveResult> {
     .single();
   if (le || !litter) return { ok: false, message: '出産記録が見つかりませんでした。' };
 
+  // 二度押し・再読み込み中の再押下で同じ腹の仔犬が重複して作られていた。
+  // 一括生成は「まだ1頭もいない腹」に1回だけ。足りない分は「＋男の子／＋女の子」で足す。
+  const { count: existing } = await supabase
+    .from('dogs')
+    .select('id', { count: 'exact', head: true })
+    .eq('litter_id', litterId)
+    .is('deleted_at', null);
+  if ((existing ?? 0) > 0) {
+    return {
+      ok: false,
+      message: `この出産の仔犬はすでに${existing}頭登録されています。足りない分は仔犬一覧の「＋男の子／＋女の子」で足してください。`,
+    };
+  }
+
   const { data: dam } = await supabase
     .from('dogs')
     .select('name, breed_code')

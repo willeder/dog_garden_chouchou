@@ -117,7 +117,7 @@ export function LitterForm({
   }
 
   async function makePuppies() {
-    if (!saved) return;
+    if (!saved || state === 'saving' || pupsMade !== null) return;
     setState('saving');
     const res = await createPuppies(saved.litterId);
     setState('saved');

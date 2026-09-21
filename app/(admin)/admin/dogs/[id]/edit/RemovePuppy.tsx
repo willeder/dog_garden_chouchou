@@ -43,7 +43,7 @@ export function RemovePuppy({ dogId, dogName }: { dogId: string; dogName: string
               {dogName} の登録を取り消します。よろしいですか。
             </p>
             <p className="mt-1.5 text-[11.5px] leading-relaxed text-adm-muted">
-              一覧から消え、出産記録の頭数も1つ減ります。
+              一覧から消え、出産記録の頭数も1つ減ります（重複して作られた子を消す場合は減りません）。
             </p>
             <div className="mt-3 flex gap-2">
               <button
