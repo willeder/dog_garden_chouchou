@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { safeFrom } from '@/app/_lib/adminNav';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/app/_lib/supabase/server';
 import { DogForm, type Master, type PartnerOption } from './DogForm';
@@ -8,7 +9,7 @@ import type { DogStatus } from '@/app/_model/admin';
 
 export const dynamic = 'force-dynamic';
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ from?: string }> };
 
 type DogRow = {
   id: string;
@@ -34,8 +35,9 @@ type DogRow = {
   breeds: { name: string } | null;
 };
 
-export default async function EditDogPage({ params }: Props) {
+export default async function EditDogPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const from = safeFrom((await searchParams).from);
   const supabase = await createClient();
 
   const { data: dogRaw } = await supabase
@@ -103,7 +105,7 @@ export default async function EditDogPage({ params }: Props) {
     <>
       <header className="sticky top-0 z-30 flex items-center gap-2.5 border-b border-adm-rule bg-adm-surface px-3 pb-2.5 pt-3">
         <Link
-          href={`/admin/dogs/${id}`}
+          href={from ?? `/admin/dogs/${id}`}
           aria-label="やめて戻る"
           className="tap flex w-[38px] items-center justify-center rounded-lg border border-adm-rule text-[15px] text-adm-muted"
         >
@@ -117,6 +119,7 @@ export default async function EditDogPage({ params }: Props) {
 
       <DogForm
         dogId={id}
+        returnTo={from ?? undefined}
         breedName={dog.breeds?.name ?? dog.breed_code}
         initial={initial}
         colors={(colors ?? []) as Master[]}

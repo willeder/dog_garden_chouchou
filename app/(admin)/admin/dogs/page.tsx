@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { withFrom } from '@/app/_lib/adminNav';
 import { createClient } from '@/app/_lib/supabase/server';
 import { ymd } from '@/app/_lib/admFormat';
 import type { Breed, DogListRow, DogListItem, DogStatus } from '@/app/_model/admin';
@@ -14,6 +15,8 @@ const GROUPS = [
   { key: 'dam', label: '♀ 母犬' },
   { key: 'sire', label: '♂ 種雄犬' },
   { key: 'retired', label: '退役' },
+  // 死亡した犬。以前はどの一覧にも出ず、帳簿からしか開けなかった
+  { key: 'died', label: '死亡' },
   // 他犬舎の種雄犬。自舎の所有ではないので普段は出さないが、
   // 登録した犬を後から探せないと困るのでここに置く
   { key: 'external', label: '外交配' },
@@ -73,6 +76,13 @@ export default async function DogsPage({ searchParams }: Props) {
   const group = (GROUPS.find((g) => g.key === sp.g)?.key ?? 'dam') as (typeof GROUPS)[number]['key'];
   const sort = (SORTS.find((s) => s.key === sp.sort)?.key ?? DEFAULT_SORT) as SortKey;
   const desc = sp.dir === 'asc' ? false : sp.dir === 'desc' ? true : DEFAULT_DESC[sort];
+  // カルテから「‹」で、この絞り込み・並び順のまま戻れるようにする
+  const hereQs = new URLSearchParams(
+    Object.entries({ q: sp.q, breed: sp.breed, g: sp.g, sort: sp.sort, dir: sp.dir }).filter(
+      (e): e is [string, string] => typeof e[1] === 'string' && e[1] !== '',
+    ),
+  ).toString();
+  const here = `/admin/dogs${hereQs ? `?${hereQs}` : ''}`;
 
   const supabase = await createClient();
 
@@ -84,19 +94,28 @@ export default async function DogsPage({ searchParams }: Props) {
        breeds ( code, name, hex ),
        coat_colors ( code, name, hex, hex2 )`,
     )
-    .is('deleted_at', null)
-    .eq('is_external', group === 'external');
+    .is('deleted_at', null);
 
-  if (group === 'dam') query = query.eq('sex', '♀').in('status', ['在籍', '預託']);
-  if (group === 'sire') query = query.eq('sex', '♂').in('status', ['在籍', '預託']);
-  if (group === 'retired') query = query.eq('status', '退役' satisfies DogStatus);
+  // 検索中は区分で絞らない。仔犬・種雄犬・死亡した犬もチップ番号で引けるようにする。
+  // 以前は「♀ 母犬」を開いたまま探すと、他の区分の犬が見つからなかった。
+  const searching = q !== '';
+  if (!searching) query = query.eq('is_external', group === 'external');
+
+  if (searching) {
+    // 区分の絞り込みはしない
+  } else if (group === 'dam') query = query.eq('sex', '♀').in('status', ['在籍', '預託']);
+  else if (group === 'sire') query = query.eq('sex', '♂').in('status', ['在籍', '預託']);
+  else if (group === 'retired') query = query.eq('status', '退役' satisfies DogStatus);
+  else if (group === 'died') query = query.eq('status', '死亡' satisfies DogStatus);
 
   if (breed !== 'all') query = query.eq('breed_code', breed);
 
   if (q) {
     // 現場ではチップ番号の下4桁で照合する。名前と番号のどちらでも引けるようにする。
     const digits = q.replace(/\D/g, '');
-    const conds = [`name.ilike.%${q}%`];
+    // PostgREST の or() の区切り文字が混ざると検索式が壊れるので外す
+    const safe = q.replace(/[,()*%\\]/g, ' ').trim();
+    const conds = [`name.ilike.%${safe}%`];
     if (digits) conds.push(`microchip.ilike.%${digits}%`);
     query = query.or(conds.join(','));
   }
@@ -185,12 +204,18 @@ export default async function DogsPage({ searchParams }: Props) {
           keep={{ q, g: group, sort, dir: desc ? 'desc' : 'asc' }}
         />
 
-        <Chips
-          items={GROUPS.map((g) => ({ key: g.key, label: g.label }))}
-          active={group}
-          param="g"
-          keep={{ q, breed, sort, dir: desc ? 'desc' : 'asc' }}
-        />
+        {searching ? (
+          <p className="text-[11.5px] leading-relaxed text-adm-muted">
+            仔犬・退役・死亡・外交配を含む、すべての犬から探しています。
+          </p>
+        ) : (
+          <Chips
+            items={GROUPS.map((g) => ({ key: g.key, label: g.label }))}
+            active={group}
+            param="g"
+            keep={{ q, breed, sort, dir: desc ? 'desc' : 'asc' }}
+          />
+        )}
 
         <SortChips active={sort} desc={desc} keep={{ q, breed, g: group }} />
       </div>
@@ -220,7 +245,7 @@ export default async function DogsPage({ searchParams }: Props) {
             {items.map((d) => (
               <li key={d.id} className="border-b border-adm-rule last:border-b-0">
                 <Link
-                  href={`/admin/dogs/${d.id}`}
+                  href={withFrom(`/admin/dogs/${d.id}`, here)}
                   className="tap flex items-center gap-3 px-3.5 py-2.5 active:bg-adm-paper"
                 >
                   <BreedBar hex={d.breeds?.hex} label={d.breeds?.name} />
@@ -243,8 +268,8 @@ export default async function DogsPage({ searchParams }: Props) {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px] font-medium">
                       {d.name}
-                      {d.status === '退役' && (
-                        <span className="ml-1.5 align-middle text-[11px] font-normal text-adm-muted">退役</span>
+                      {d.status !== '在籍' && (
+                        <span className="ml-1.5 align-middle text-[11px] font-normal text-adm-muted">{d.status}</span>
                       )}
                     </span>
                     <span className="num block truncate text-[11.5px] text-adm-muted">

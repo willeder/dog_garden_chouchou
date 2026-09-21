@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { withFrom } from '@/app/_lib/adminNav';
 import { createClient } from '@/app/_lib/supabase/server';
 import { ymd, todayJst } from '@/app/_lib/admFormat';
 import { BreedBar } from '@/app/(admin)/_components/Marks';
@@ -6,6 +7,7 @@ import { LedgerCsv } from './LedgerCsv';
 import {
   LEDGER_FILTERS,
   missingItems,
+  type LedgerColumn,
   type LedgerFilterKey,
   type LedgerItem,
   type LedgerRow,
@@ -15,10 +17,14 @@ export const dynamic = 'force-dynamic';
 
 type Props = { searchParams: Promise<{ f?: string }> };
 
+const HANDOVER_COLS: LedgerColumn[] = ['販売・引渡しの日', '販売・引渡し先', '販売担当者名', '対面説明等の実施'];
+
 export default async function LedgerPage({ searchParams }: Props) {
   const sp = await searchParams;
   const filter: LedgerFilterKey =
     (LEDGER_FILTERS.find((f) => f.key === sp.f)?.key as LedgerFilterKey) ?? 'all';
+  // 編集・引渡しの画面から、保存後にこの絞り込みへ戻す
+  const here = filter === 'all' ? '/admin/more/ledger' : `/admin/more/ledger?f=${filter}`;
 
   const supabase = await createClient();
 
@@ -116,7 +122,13 @@ export default async function LedgerPage({ searchParams }: Props) {
           {shown.map((it) => (
             <li key={it.row.id} className="border-b border-adm-rule last:border-b-0">
               <Link
-                href={`/admin/dogs/${it.row.id}/edit`}
+                href={withFrom(
+                  // 引渡しの項目が足りない子は、引渡しの記録を直接開く
+                  it.missing.some((c) => HANDOVER_COLS.includes(c))
+                    ? `/admin/dogs/${it.row.id}/handover`
+                    : `/admin/dogs/${it.row.id}/edit`,
+                  here,
+                )}
                 className="tap flex items-center gap-3 px-3.5 py-2.5 active:bg-adm-paper"
               >
                 <BreedBar hex={it.breedHex} label={String(it.row['品種等の名称'] ?? '')} />
@@ -153,7 +165,7 @@ export default async function LedgerPage({ searchParams }: Props) {
       <div className="mx-4 mt-3 rounded-xl border border-adm-rule bg-adm-hint px-3 py-2.5 text-[11.5px] leading-relaxed text-adm-muted">
         <b className="text-adm-ink">動物愛護管理法で保存が義務づけられている帳簿です。</b>
         記録は5年間残す必要があるため、この画面から消すことはできません。
-        名前を押すとその犬の編集画面が開きます。
+        名前を押すとその犬の編集画面（引渡しの項目が足りない子は引渡しの記録）が開き、保存するとこの画面に戻ります。
         CSVはExcelでそのまま開けます（提出様式は自治体ごとに違うため、書き出したあとで整えてください）。
       </div>
 

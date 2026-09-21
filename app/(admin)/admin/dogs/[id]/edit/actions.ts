@@ -29,6 +29,19 @@ export async function saveDog(id: string, input: DogEditInput): Promise<SaveDogR
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
 
+  // 「引渡済」は引渡しの記録と一緒にしか付けさせない。
+  // 状態だけ変えると、帳簿の引渡し先・担当者・対面説明が空のまま残る。
+  if (input.status === '引渡済') {
+    const { data: cur } = await supabase.from('dogs').select('status').eq('id', id).maybeSingle();
+    if (cur && cur.status !== '引渡済') {
+      return {
+        ok: false,
+        message: '「引渡済」にするときは、カルテの「引渡しを記録する」から引渡し先などを入れてください。',
+        field: 'status',
+      };
+    }
+  }
+
   const chip = normalizeChip(input.microchip);
   const weight = parseDecimal(input.weight_kg);
   const acquired = selfBredAcquiredOn(input);

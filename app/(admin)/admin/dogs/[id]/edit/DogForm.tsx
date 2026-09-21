@@ -32,6 +32,7 @@ export type PartnerOption = { id: string; name: string; license_no: string | nul
 
 export function DogForm({
   dogId,
+  returnTo,
   breedName,
   initial,
   colors,
@@ -48,6 +49,8 @@ export function DogForm({
 }: {
   /** 編集対象。新規登録のときは無い */
   dogId?: string;
+  /** 保存後に戻る画面。開いた元の画面（?from=） */
+  returnTo?: string;
   breedName: string;
   initial: DogEditInput;
   colors: Master[];
@@ -105,7 +108,7 @@ export function DogForm({
     // 保存できたら個体カードへ戻る。保存後に同じ画面に留まると
     // 「保存されたのか」が分からず二度押しになる
     const to = res.id ?? dogId;
-    router.push(to ? `/admin/dogs/${to}` : '/admin/dogs');
+    router.push(returnTo ?? (to ? `/admin/dogs/${to}` : '/admin/dogs'));
     router.refresh();
   }
 

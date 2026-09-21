@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { safeFrom } from '@/app/_lib/adminNav';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/app/_lib/supabase/server';
 import { PUBLIC_BUCKET } from '@/app/_lib/supabase/storage';
@@ -8,7 +9,7 @@ import type { DogStatus } from '@/app/_model/admin';
 
 export const dynamic = 'force-dynamic';
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ from?: string }> };
 
 type DogRow = {
   id: string;
@@ -25,8 +26,9 @@ type DogRow = {
   public_message: string | null;
 };
 
-export default async function PublishPage({ params }: Props) {
+export default async function PublishPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const from = safeFrom((await searchParams).from);
   const supabase = await createClient();
 
   const { data: dogRaw } = await supabase
@@ -128,7 +130,7 @@ export default async function PublishPage({ params }: Props) {
     <>
       <header className="sticky top-0 z-30 flex items-center gap-2.5 border-b border-adm-rule bg-adm-surface px-3 pb-2.5 pt-3">
         <Link
-          href={`/admin/dogs/${id}`}
+          href={from ?? `/admin/dogs/${id}`}
           aria-label="やめて戻る"
           className="tap flex w-[38px] items-center justify-center rounded-lg border border-adm-rule text-[15px] text-adm-muted"
         >
@@ -144,6 +146,7 @@ export default async function PublishPage({ params }: Props) {
 
       <PublishForm
         dogId={id}
+        returnTo={from ?? undefined}
         dogName={dog.name}
         initial={initial}
         checks={checks}

@@ -6,6 +6,9 @@ import type { DogDetail, LitterRow, VaccinationRow, VaccineDueRow } from '@/app/
 import { BreedChip, ColorDot } from '@/app/(admin)/_components/Marks';
 import { PhotoManager, type PhotoItem } from './PhotoManager';
 import { VideoManager } from './VideoManager';
+import { QuickStatus } from './QuickStatus';
+import { VaccinationItem } from './VaccinationItem';
+import { safeFrom, withFrom } from '@/app/_lib/adminNav';
 import { PromoteToParent } from './PromoteToParent';
 import { PRIVATE_BUCKET, PUBLIC_BUCKET, publicPhotoUrl, publicVideoUrl } from '@/app/_lib/supabase/storage';
 
@@ -16,13 +19,17 @@ type Tab = (typeof TABS)[number];
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ t?: string }>;
+  searchParams: Promise<{ t?: string; from?: string }>;
 };
 
 export default async function DogPage({ params, searchParams }: Props) {
   const { id } = await params;
   const sp = await searchParams;
   const tab: Tab = (TABS as readonly string[]).includes(sp.t ?? '') ? (sp.t as Tab) : '基本';
+  // 来た画面。戻る先に使う
+  const from = safeFrom(sp.from);
+  // この画面自身（タブ込み）。ここから開く画面の戻り先にする
+  const self = withFrom(`/admin/dogs/${id}${sp.t ? `?t=${encodeURIComponent(sp.t)}` : ''}`, from);
 
   const supabase = await createClient();
 
@@ -31,7 +38,7 @@ export default async function DogPage({ params, searchParams }: Props) {
     .select(
       `id, name, sex, breed_code, birthday, weight_kg, microchip, color, color_code,
        coat_type_code, status, is_external, genes, breeder_note, is_self_bred,
-       acquired_on, died_on, note, sire_id, dam_id, is_published, litter_id, video_path,
+       acquired_on, died_on, note, sire_id, dam_id, is_published, litter_id, video_path, list_price,
        breeds ( code, name, hex ),
        coat_colors ( code, name, hex, hex2 ),
        coat_types ( code, name ),
@@ -50,6 +57,19 @@ export default async function DogPage({ params, searchParams }: Props) {
   const PUP_STATUSES = ['在舎', '商談中', '売約', '引渡済'];
   const litterId = (dogRaw as { litter_id: string | null }).litter_id;
   const videoPath = (dogRaw as { video_path: string | null }).video_path;
+  const listPrice = (dogRaw as { list_price: number | null }).list_price;
+
+  // 引渡しの記録（引渡済の子のカルテに出す）
+  const { data: saleRaw } =
+    dog.status === '引渡済'
+      ? await supabase
+          .from('sales')
+          .select('handover_date, staff_name, explained_in_person, customers ( name )')
+          .eq('dog_id', id)
+          .is('deleted_at', null)
+          .maybeSingle()
+      : { data: null };
+  const sale = saleRaw as unknown as SaleSummary | null;
   const isPuppy = litterId !== null && (PUP_STATUSES.includes(dog.status) || dog.status === '死亡');
   const backHref = !isPuppy
     ? '/admin/dogs'
@@ -154,15 +174,15 @@ export default async function DogPage({ params, searchParams }: Props) {
     <>
       <header className="sticky top-0 z-20 flex items-center gap-2.5 border-b border-adm-rule bg-adm-surface px-3 pb-2.5 pt-3">
         <Link
-          href={backHref}
-          aria-label={isPuppy ? '仔犬一覧へ戻る' : '犬一覧へ戻る'}
+          href={from ?? backHref}
+          aria-label={from ? '前の画面へ戻る' : isPuppy ? '仔犬一覧へ戻る' : '犬一覧へ戻る'}
           className="tap flex w-[38px] items-center justify-center rounded-lg border border-adm-rule text-[15px] text-adm-muted"
         >
           ‹
         </Link>
         <h1 className="min-w-0 flex-1 truncate text-[17px] font-bold tracking-tight">{dog.name}</h1>
         <Link
-          href={`/admin/dogs/${id}/edit`}
+          href={withFrom(`/admin/dogs/${id}/edit`, self)}
           className="tap flex shrink-0 items-center rounded-lg border border-adm-rule px-3 text-[13px] font-medium text-adm-action"
         >
           編集
@@ -209,7 +229,8 @@ export default async function DogPage({ params, searchParams }: Props) {
           {TABS.map((t) => (
             <Link
               key={t}
-              href={`/admin/dogs/${id}?t=${encodeURIComponent(t)}`}
+              href={withFrom(`/admin/dogs/${id}?t=${encodeURIComponent(t)}`, from)}
+              replace
               scroll={false}
               className={`tap flex items-center justify-center border-b-2 pb-2 pt-2.5 text-[13px] ${
                 t === tab ? 'border-adm-action font-bold text-adm-action' : 'border-transparent text-adm-muted'
@@ -221,7 +242,7 @@ export default async function DogPage({ params, searchParams }: Props) {
         </nav>
       </div>
 
-      {tab === '基本' && <BasicTab dog={dog} />}
+      {tab === '基本' && <BasicTab dog={dog} listPrice={listPrice} sale={sale} self={self} />}
       {tab === '写真' && (
         <PhotoManager
           dogId={dog.id}
@@ -238,7 +259,7 @@ export default async function DogPage({ params, searchParams }: Props) {
           videoUrl={videoPath ? publicVideoUrl(videoPath) : null}
         />
       )}
-      {tab === '出産' && <LittersTab litters={litters} sex={dog.sex} />}
+      {tab === '出産' && <LittersTab litters={litters} sex={dog.sex} self={self} />}
       {tab === '出産' && dog.sex === '♀' && (
         <div className="fixed inset-x-0 bottom-[58px] z-20 mx-auto max-w-2xl px-4 pb-3">
           <Link
@@ -250,7 +271,7 @@ export default async function DogPage({ params, searchParams }: Props) {
         </div>
       )}
       {tab === '血統' && <PedigreeTab dog={dog} sire={sire} dam={dam} grand={grand} photo={parentPhoto} />}
-      {tab === 'ワクチン' && <VaccineTab rows={vaccinations} due={due} dogId={id} />}
+      {tab === 'ワクチン' && <VaccineTab rows={vaccinations} due={due} dogId={id} self={self} />}
 
       <div className="h-6" />
     </>
@@ -268,7 +289,24 @@ function Stat({ v, k }: { v: string; k: string }) {
 
 /* ───────── 基本 ───────── */
 
-function BasicTab({ dog }: { dog: DogDetail }) {
+type SaleSummary = {
+  handover_date: string | null;
+  staff_name: string | null;
+  explained_in_person: boolean;
+  customers: { name: string } | null;
+};
+
+function BasicTab({
+  dog,
+  listPrice,
+  sale,
+  self,
+}: {
+  dog: DogDetail;
+  listPrice: number | null;
+  sale: SaleSummary | null;
+  self: string;
+}) {
   const coat = dog.coat_types?.name;
   const colorLabel = dog.coat_colors?.name
     ? `${dog.coat_colors.name}${coat ? `・${coat}` : ''}`
@@ -294,16 +332,59 @@ function BasicTab({ dog }: { dog: DogDetail }) {
       {(['在舎', '商談中', '売約'] as string[]).includes(dog.status) && (
         <Section title="公式サイト">
           <Link
-            href={`/admin/dogs/${dog.id}/publish`}
+            href={withFrom(`/admin/dogs/${dog.id}/publish`, self)}
             className="tap flex items-center justify-between gap-3 rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 active:bg-adm-paper"
           >
-            <span className="text-[13.5px] font-medium">サイト公開の設定</span>
+            <span className="min-w-0">
+              <span className="block text-[13.5px] font-medium">サイト公開・価格</span>
+              <span className="num block text-[11.5px] text-adm-muted">
+                {listPrice !== null ? `価格 ${listPrice.toLocaleString('ja-JP')}円` : '価格 未入力（サイトでは応相談）'}
+              </span>
+            </span>
             <span className="shrink-0 text-[13px] text-adm-muted">
               <span className={dog.is_published ? 'font-bold text-adm-action' : ''}>
                 {dog.is_published ? '公開中' : '出していません'}
               </span>
               <span className="ml-1.5">›</span>
             </span>
+          </Link>
+        </Section>
+      )}
+
+      {(['在舎', '商談中', '売約'] as string[]).includes(dog.status) && (
+        <Section title="販売">
+          <QuickStatus dogId={dog.id} status={dog.status as '在舎' | '商談中' | '売約'} />
+          <Link
+            href={withFrom(`/admin/dogs/${dog.id}/handover`, self)}
+            className="tap mt-2 flex items-center justify-center rounded-xl border border-adm-action bg-adm-surface px-4 py-2.5 text-[13.5px] font-bold text-adm-action"
+          >
+            引渡しを記録する
+          </Link>
+          <p className="mt-1.5 text-[11.5px] leading-relaxed text-adm-muted">
+            引渡し先・担当者・対面説明を入れると「引渡済」になり、帳簿に載ります。
+          </p>
+        </Section>
+      )}
+
+      {dog.status === '引渡済' && (
+        <Section title="引渡し" note="帳簿の項目">
+          <Link
+            href={withFrom(`/admin/dogs/${dog.id}/handover`, self)}
+            className="tap flex items-center justify-between gap-3 rounded-xl border border-adm-rule bg-adm-surface px-3.5 py-3 active:bg-adm-paper"
+          >
+            {sale ? (
+              <span className="min-w-0 text-[13px]">
+                <span className="num block font-medium">
+                  {ymd(sale.handover_date)}　{sale.customers?.name ?? '引渡し先 未入力'}
+                </span>
+                <span className="block text-[11.5px] text-adm-muted">
+                  担当 {sale.staff_name || '未入力'}　対面説明 {sale.explained_in_person ? '済' : '未'}
+                </span>
+              </span>
+            ) : (
+              <span className="text-[13px] font-bold text-adm-danger">引渡しの記録がありません。入れてください</span>
+            )}
+            <span className="shrink-0 text-[13px] text-adm-action">{sale ? '直す' : '入れる'} ›</span>
           </Link>
         </Section>
       )}
@@ -354,7 +435,7 @@ const MISSING = '未入力';
 
 /* ───────── 出産 ───────── */
 
-function LittersTab({ litters, sex }: { litters: LitterRow[]; sex: string }) {
+function LittersTab({ litters, sex, self }: { litters: LitterRow[]; sex: string; self: string }) {
   if (sex === '♂') {
     return (
       <Section title="出産">
@@ -394,7 +475,7 @@ function LittersTab({ litters, sex }: { litters: LitterRow[]; sex: string }) {
               </p>
               {/* 出産日・父・頭数の打ち間違いはここから直す */}
               <Link
-                href={`/admin/litters/${l.id}/edit`}
+                href={withFrom(`/admin/litters/${l.id}/edit`, self)}
                 className="tap shrink-0 text-[12px] text-adm-action underline underline-offset-2"
               >
                 直す
@@ -604,10 +685,12 @@ function VaccineTab({
   rows,
   due,
   dogId,
+  self,
 }: {
   rows: VaccinationRow[];
   due: VaccineDueRow[];
   dogId: string;
+  self: string;
 }) {
   const kinds = ['混合', '狂犬病'];
   return (
@@ -635,7 +718,7 @@ function VaccineTab({
 
       <Section title="記録する">
         <Link
-          href={`/admin/vaccinations/new?dog=${dogId}`}
+          href={withFrom(`/admin/vaccinations/new?dog=${dogId}`, self)}
           className="tap flex items-center justify-center rounded-xl border border-adm-rule bg-adm-surface px-4 py-3 text-[14px] font-medium text-adm-action"
         >
           ＋ 接種を記録する
@@ -651,10 +734,14 @@ function VaccineTab({
         ) : (
           <ul className="overflow-hidden rounded-xl border border-adm-rule bg-adm-surface">
             {rows.map((v) => (
-              <li key={v.id} className="flex items-center justify-between gap-3 border-b border-adm-rule px-3.5 py-2.5 last:border-b-0">
-                <span className="text-[13px]">{v.kind}</span>
-                <span className="num text-[13px]">{ymd(v.dosed_on)}</span>
-              </li>
+              <VaccinationItem
+                key={v.id}
+                id={v.id}
+                kind={v.kind}
+                dosedOn={v.dosed_on}
+                note={v.note}
+                kinds={kinds}
+              />
             ))}
           </ul>
         )}

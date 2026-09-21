@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { safeFrom } from '@/app/_lib/adminNav';
 import { createClient } from '@/app/_lib/supabase/server';
 import { todayJst, ymd } from '@/app/_lib/admFormat';
 import { VaccineForm } from './VaccineForm';
@@ -71,7 +72,8 @@ export default async function NewVaccinationPage({ searchParams }: Props) {
     };
   });
 
-  const back = sp.dog ? `/admin/dogs/${sp.dog}?t=${encodeURIComponent('ワクチン')}` : '/admin';
+  const back =
+    safeFrom(sp.from) ?? (sp.dog ? `/admin/dogs/${sp.dog}?t=${encodeURIComponent('ワクチン')}` : '/admin');
 
   return (
     <>

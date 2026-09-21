@@ -41,6 +41,7 @@ export type PupRow = {
 
 export function LitterEditForm({
   litterId,
+  returnTo,
   damId,
   damName,
   damBreedCode,
@@ -50,6 +51,8 @@ export function LitterEditForm({
   footer,
 }: {
   litterId: string;
+  /** 保存後に戻る画面。開いた元の画面（?from=） */
+  returnTo?: string;
   damId: string;
   damName: string;
   damBreedCode: string;
@@ -122,7 +125,7 @@ export function LitterEditForm({
     }
     // 保存できたら母犬のカルテの出産タブへ戻る。
     // 同じ画面に留まると「保存されたのか」が分からず二度押しになる。
-    router.push(`/admin/dogs/${damId}?t=${encodeURIComponent('出産')}`);
+    router.push(returnTo ?? `/admin/dogs/${damId}?t=${encodeURIComponent('出産')}`);
     router.refresh();
   }
 

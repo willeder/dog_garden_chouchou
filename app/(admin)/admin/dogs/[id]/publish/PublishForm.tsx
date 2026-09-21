@@ -28,12 +28,14 @@ export type Check = {
 
 export function PublishForm({
   dogId,
+  returnTo,
   dogName,
   initial,
   checks,
   publicPath,
 }: {
   dogId: string;
+  returnTo?: string;
   dogName: string;
   initial: PublishInput;
   checks: Check[];
@@ -63,7 +65,7 @@ export function PublishForm({
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    router.push(`/admin/dogs/${dogId}`);
+    router.push(returnTo ?? `/admin/dogs/${dogId}`);
     router.refresh();
   }
 

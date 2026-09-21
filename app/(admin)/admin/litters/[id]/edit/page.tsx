@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { safeFrom } from '@/app/_lib/adminNav';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/app/_lib/supabase/server';
 import { ymd } from '@/app/_lib/admFormat';
@@ -9,7 +10,7 @@ import type { LitterEditInput } from './shared';
 
 export const dynamic = 'force-dynamic';
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ from?: string }> };
 
 type LitterRow = {
   id: string;
@@ -24,8 +25,9 @@ type LitterRow = {
   note: string | null;
 };
 
-export default async function EditLitterPage({ params }: Props) {
+export default async function EditLitterPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const from = safeFrom((await searchParams).from);
   const supabase = await createClient();
 
   const { data: litterRaw } = await supabase
@@ -121,7 +123,7 @@ export default async function EditLitterPage({ params }: Props) {
     <>
       <header className="sticky top-0 z-30 flex items-center gap-2.5 border-b border-adm-rule bg-adm-surface px-3 pb-2.5 pt-3">
         <Link
-          href={`/admin/dogs/${litter.dam_id}?t=${encodeURIComponent('出産')}`}
+          href={from ?? `/admin/dogs/${litter.dam_id}?t=${encodeURIComponent('出産')}`}
           aria-label="やめて戻る"
           className="tap flex w-[38px] items-center justify-center rounded-lg border border-adm-rule text-[15px] text-adm-muted"
         >
@@ -143,6 +145,7 @@ export default async function EditLitterPage({ params }: Props) {
 
       <LitterEditForm
         litterId={litter.id}
+        returnTo={from ?? undefined}
         damId={litter.dam_id}
         damName={dam.name}
         damBreedCode={dam.breed_code}

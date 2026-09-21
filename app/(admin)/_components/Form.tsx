@@ -297,7 +297,12 @@ export function SaveBar({
           type="button"
           onClick={onSave}
           disabled={busy || disabled}
-          className="tap flex w-full items-center justify-center rounded-xl bg-adm-action px-4 py-3.5 text-[15px] font-bold text-white shadow-lg disabled:opacity-50"
+          // 変更がないときは緑の大きなボタンにしない。押せるように見えて、下の入力欄も隠れていた
+          className={
+            disabled && !busy
+              ? 'flex w-full items-center justify-center rounded-xl border border-adm-rule bg-adm-surface/85 px-4 py-2 text-[12.5px] text-adm-muted backdrop-blur'
+              : 'tap flex w-full items-center justify-center rounded-xl bg-adm-action px-4 py-3.5 text-[15px] font-bold text-white shadow-lg disabled:opacity-50'
+          }
         >
           {busy ? '保存中…' : label}
         </button>

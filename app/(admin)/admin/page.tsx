@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { withFrom } from '@/app/_lib/adminNav';
 import { createClient } from '@/app/_lib/supabase/server';
 import { ymd, ym, todayJst, monthStart, shiftMonth, isOverdue } from '@/app/_lib/admFormat';
 import { ALERT_CATEGORIES, type AlertRow, type Breed } from '@/app/_model/admin';
@@ -35,6 +36,8 @@ export default async function HomePage({ searchParams }: Props) {
   const rows = (alerts ?? []) as AlertRow[];
 
   const isThisMonth = month === monthStart(ty, tm);
+  // カルテから「‹」でこの月に戻れるようにする
+  const here = isThisMonth ? '/admin' : `/admin?m=${month.slice(0, 7)}`;
 
   return (
     <>
@@ -90,7 +93,7 @@ export default async function HomePage({ searchParams }: Props) {
                   return (
                     <li key={`${r.category}-${r.dog_id}-${i}`} className="border-b border-adm-rule last:border-b-0">
                       <Link
-                        href={`/admin/dogs/${r.dog_id}`}
+                        href={withFrom(`/admin/dogs/${r.dog_id}`, here)}
                         className="tap flex items-center gap-3 px-3.5 py-2.5 active:bg-adm-paper"
                       >
                         <BreedBar hex={breed?.hex} label={breed?.name} />

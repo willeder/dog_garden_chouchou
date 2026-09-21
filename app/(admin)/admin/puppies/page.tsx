@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { withFrom } from '@/app/_lib/adminNav';
 import { createClient } from '@/app/_lib/supabase/server';
 import { ymd, ageLabel, todayJst } from '@/app/_lib/admFormat';
 import type { DogStatus } from '@/app/_model/admin';
@@ -23,6 +24,7 @@ const FILTERS = [
   { key: '商談中', label: '商談中', statuses: ['商談中'] as DogStatus[] },
   { key: '売約', label: '売約', statuses: ['売約'] as DogStatus[] },
   { key: '引渡済', label: '引渡済', statuses: ['引渡済'] as DogStatus[] },
+  { key: '死亡', label: '死亡', statuses: ['死亡'] as DogStatus[] },
 ] as const;
 
 type Row = {
@@ -44,6 +46,8 @@ type Row = {
 export default async function PuppiesPage({ searchParams }: Props) {
   const sp = await searchParams;
   const filter = FILTERS.find((f) => f.key === sp.s) ?? FILTERS[0];
+  // カルテから「‹」でこの絞り込みに戻れるようにする
+  const here = filter.key === 'active' ? '/admin/puppies' : `/admin/puppies?s=${encodeURIComponent(filter.key)}`;
 
   const supabase = await createClient();
 
@@ -172,6 +176,18 @@ export default async function PuppiesPage({ searchParams }: Props) {
         ))}
       </div>
 
+      {/* 仔犬もチップ番号・名前で探せるように。検索は「犬」タブの全頭検索を使う */}
+      <form action="/admin/dogs" className="px-4 pt-2.5">
+        <input
+          type="search"
+          name="q"
+          inputMode="search"
+          placeholder="名前 / チップ下4桁で探す"
+          aria-label="仔犬を探す"
+          className="num tap w-full rounded-lg border border-adm-rule bg-adm-surface px-3 py-2 text-[16px] outline-none placeholder:font-adm placeholder:text-[14px] placeholder:text-[#A6A9A4] focus:border-adm-action"
+        />
+      </form>
+
       {canAdd && (
         <UnregisteredLitters
           litters={pending}
@@ -219,7 +235,7 @@ export default async function PuppiesPage({ searchParams }: Props) {
                 {pups.map((p) => (
                   <li key={p.id} className="border-b border-adm-rule last:border-b-0">
                     <Link
-                      href={`/admin/dogs/${p.id}`}
+                      href={withFrom(`/admin/dogs/${p.id}`, here)}
                       className="tap flex items-center gap-3 px-3.5 py-2.5 active:bg-adm-paper"
                     >
                       <BreedBar hex={p.breeds?.hex} label={p.breeds?.name} />
@@ -270,6 +286,12 @@ export default async function PuppiesPage({ searchParams }: Props) {
                 ))}
               </ul>
 
+              <Link
+                href={withFrom(`/admin/litters/${litterId}/pups`, here)}
+                className="tap mt-2 flex items-center justify-center rounded-lg border border-adm-rule bg-adm-surface px-3 py-2 text-[13px] font-medium text-adm-action"
+              >
+                名前・チップをまとめて入力
+              </Link>
               {canAdd && l && <LitterActions litterId={litterId} damName={l.dam_name} />}
             </section>
           );

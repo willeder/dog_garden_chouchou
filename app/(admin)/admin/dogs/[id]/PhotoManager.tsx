@@ -88,6 +88,8 @@ function Section({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState('');
+  // 削除は2回押しで確定。1回目で「本当に削除」に変わる（押し間違いでサイトの写真が消えないように）
+  const [confirmId, setConfirmId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const router = useRouter();
 
@@ -221,14 +223,28 @@ function Section({
                     メインに
                   </button>
                 )}
-                <button
-                  onClick={() => remove(p)}
-                  disabled={busy}
-                  aria-label={`${i + 1}枚目を削除`}
-                  className="text-[10.5px] text-adm-danger underline underline-offset-2 disabled:opacity-40"
-                >
-                  削除
-                </button>
+                {confirmId === p.id ? (
+                  <button
+                    onClick={() => {
+                      setConfirmId(null);
+                      remove(p);
+                    }}
+                    disabled={busy}
+                    aria-label={`${i + 1}枚目を本当に削除`}
+                    className="rounded bg-adm-danger px-1.5 py-0.5 text-[10.5px] font-bold text-white disabled:opacity-40"
+                  >
+                    本当に削除
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setConfirmId(p.id)}
+                    disabled={busy}
+                    aria-label={`${i + 1}枚目を削除`}
+                    className="text-[10.5px] text-adm-danger underline underline-offset-2 disabled:opacity-40"
+                  >
+                    削除
+                  </button>
+                )}
               </div>
             </li>
           ))}
