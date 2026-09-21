@@ -57,6 +57,16 @@ export async function addPuppy(litterId: string, sex: '♂' | '♀'): Promise<Pu
     .eq('sex', sex)
     .is('deleted_at', null);
 
+  // 先に出産記録の頭数を1つ増やしてから仔犬を作る。
+  // DB側で「仔犬の数は出産記録の頭数を超えない」を守っているため、この順でないと弾かれる。
+  const current = sex === '♂' ? litter.male_count : litter.female_count;
+  const countPatch = (n: number) => (sex === '♂' ? { male_count: n } : { female_count: n });
+  const { error: le } = await supabase
+    .from('litters')
+    .update(countPatch(current + 1))
+    .eq('id', litterId);
+  if (le) return { ok: false, message: `出産記録の頭数を直せませんでした: ${le.message}` };
+
   const { data: created, error } = await supabase
     .from('dogs')
     .insert({
@@ -75,17 +85,10 @@ export async function addPuppy(litterId: string, sex: '♂' | '♀'): Promise<Pu
     .select('id, name')
     .single();
 
-  if (error) return { ok: false, message: `追加できませんでした: ${error.message}` };
-
-  const patch =
-    sex === '♂'
-      ? { male_count: litter.male_count + 1 }
-      : { female_count: litter.female_count + 1 };
-  const { error: le } = await supabase.from('litters').update(patch).eq('id', litterId);
-  if (le) {
-    // 仔犬は作れたが頭数を直せなかった。行を残すと数が食い違うので戻す。
-    await supabase.from('dogs').delete().eq('id', created.id);
-    return { ok: false, message: `出産記録の頭数を直せませんでした: ${le.message}` };
+  if (error || !created) {
+    // 仔犬を作れなかったので頭数を戻す
+    await supabase.from('litters').update(countPatch(current)).eq('id', litterId);
+    return { ok: false, message: `追加できませんでした: ${error?.message ?? '不明なエラー'}` };
   }
 
   revalidateAll(litter.dam_id);
