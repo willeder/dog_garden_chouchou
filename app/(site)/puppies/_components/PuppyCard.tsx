@@ -43,6 +43,14 @@ export const PuppyCard = ({ puppy }: { puppy: Puppy }) => {
             <div className="h-full w-full bg-placeholder" />
           )}
           {puppy.status && <StatusBadge status={puppy.status} />}
+          {/* 写真が何枚あるか・動画があるかを一覧で分かるようにする。詳細を開く動機になる */}
+          {(puppy.images.length > 1 || puppy.video) && (
+            <span className="absolute bottom-2 right-2 rounded-full bg-black/55 px-2 py-[2px] font-jp text-[11px] text-white">
+              {puppy.images.length > 1 && `写真${puppy.images.length}枚`}
+              {puppy.images.length > 1 && puppy.video && "・"}
+              {puppy.video && "動画あり"}
+            </span>
+          )}
         </div>
 
         <dl className="mx-auto mt-2 w-[213px]">

@@ -97,27 +97,15 @@ export default async function PuppyDetailPage({ params }: PageProps) {
           </div>
 
           <FadeInSection className="flex w-full flex-col items-center gap-3">
-            <DetailCard title="写真ギャラリー" icon="/assets/icon-photo-white.svg">
+            <DetailCard title={puppy.video ? "写真・動画" : "写真ギャラリー"} icon="/assets/icon-photo-white.svg">
               <PhotoGallery
                 images={puppy.images}
                 alt={`${puppy.breed}の仔犬`}
                 status={puppy.status}
+                video={puppy.video}
+                puppyId={puppy.id}
               />
             </DetailCard>
-
-            {/* 動画は任意。未登録の子は見出しだけのカードが残らないよう非表示にする */}
-            {puppy.video && (
-              <DetailCard title="動画" icon="/assets/icon-photo-white.svg">
-                <video
-                  src={puppy.video}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  aria-label={`${puppy.breed}の仔犬の動画`}
-                  className="w-full rounded-[20px] bg-black"
-                />
-              </DetailCard>
-            )}
 
             <DetailCard title="基本情報" icon="/assets/paw-white.svg">
               <PuppySpec puppy={puppy} />
