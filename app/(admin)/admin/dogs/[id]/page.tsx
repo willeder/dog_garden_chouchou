@@ -5,8 +5,9 @@ import { ymd, ym, chip, ageLabel, todayJst } from '@/app/_lib/admFormat';
 import type { DogDetail, LitterRow, VaccinationRow, VaccineDueRow } from '@/app/_model/admin';
 import { BreedChip, ColorDot } from '@/app/(admin)/_components/Marks';
 import { PhotoManager, type PhotoItem } from './PhotoManager';
+import { VideoManager } from './VideoManager';
 import { PromoteToParent } from './PromoteToParent';
-import { PRIVATE_BUCKET, PUBLIC_BUCKET, publicPhotoUrl } from '@/app/_lib/supabase/storage';
+import { PRIVATE_BUCKET, PUBLIC_BUCKET, publicPhotoUrl, publicVideoUrl } from '@/app/_lib/supabase/storage';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,7 @@ export default async function DogPage({ params, searchParams }: Props) {
     .select(
       `id, name, sex, breed_code, birthday, weight_kg, microchip, color, color_code,
        coat_type_code, status, is_external, genes, breeder_note, is_self_bred,
-       acquired_on, died_on, note, sire_id, dam_id, is_published, litter_id,
+       acquired_on, died_on, note, sire_id, dam_id, is_published, litter_id, video_path,
        breeds ( code, name, hex ),
        coat_colors ( code, name, hex, hex2 ),
        coat_types ( code, name ),
@@ -48,6 +49,7 @@ export default async function DogPage({ params, searchParams }: Props) {
   // 以前は一律に犬一覧（親犬）へ戻っていた。
   const PUP_STATUSES = ['在舎', '商談中', '売約', '引渡済'];
   const litterId = (dogRaw as { litter_id: string | null }).litter_id;
+  const videoPath = (dogRaw as { video_path: string | null }).video_path;
   const isPuppy = litterId !== null && (PUP_STATUSES.includes(dog.status) || dog.status === '死亡');
   const backHref = !isPuppy
     ? '/admin/dogs'
@@ -226,6 +228,14 @@ export default async function DogPage({ params, searchParams }: Props) {
           dogName={dog.name}
           publicPhotos={publicPhotos}
           privatePhotos={privatePhotos}
+        />
+      )}
+      {/* 動画は仔犬ページにだけ出る。サイトに出せる状態の子にだけ枠を出す */}
+      {tab === '写真' && (['在舎', '商談中', '売約'] as string[]).includes(dog.status) && (
+        <VideoManager
+          dogId={dog.id}
+          dogName={dog.name}
+          videoUrl={videoPath ? publicVideoUrl(videoPath) : null}
         />
       )}
       {tab === '出産' && <LittersTab litters={litters} sex={dog.sex} />}

@@ -42,4 +42,6 @@ export type Puppy = {
   father?: Parent;
   /** 未設定＝募集中 */
   status?: Status;
+  /** 紹介動画のURL（任意・1本）。未登録ならセクションごと非表示 */
+  video?: string;
 };

@@ -19,7 +19,7 @@ const SELECT = `
   breed_name, breed_explanation, color_name, coat_type_name,
   weight_kg, expected_weight_kg, expected_height_cm,
   list_price, public_message, created_at,
-  photos, mother, father
+  photos, mother, father, video_path
 `;
 
 /** 仔犬一覧。新しい子が先。 */

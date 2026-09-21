@@ -41,6 +41,8 @@ export type SBPuppy = {
   photos: SBPhoto[] | null;
   mother: SBParent | null;
   father: SBParent | null;
+  /** 動画（dogs-video バケット内のパス）。なければ null */
+  video_path: string | null;
 };
 
 /** 公開バケットの画像URL。バケットが public なので署名は不要 */
@@ -107,6 +109,9 @@ export const newPuppyFromSB = (r: SBPuppy): Puppy => ({
   mother: toParent(r.mother),
   father: toParent(r.father),
   status: toStatus(r.status),
+  video: r.video_path
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""}/storage/v1/object/public/dogs-video/${r.video_path}`
+    : undefined,
 });
 
 export const newPuppiesFromSB = (rows: SBPuppy[]): Puppy[] => rows.map(newPuppyFromSB);

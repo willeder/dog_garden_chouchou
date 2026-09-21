@@ -105,6 +105,20 @@ export default async function PuppyDetailPage({ params }: PageProps) {
               />
             </DetailCard>
 
+            {/* 動画は任意。未登録の子は見出しだけのカードが残らないよう非表示にする */}
+            {puppy.video && (
+              <DetailCard title="動画" icon="/assets/icon-photo-white.svg">
+                <video
+                  src={puppy.video}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  aria-label={`${puppy.breed}の仔犬の動画`}
+                  className="w-full rounded-[20px] bg-black"
+                />
+              </DetailCard>
+            )}
+
             <DetailCard title="基本情報" icon="/assets/paw-white.svg">
               <PuppySpec puppy={puppy} />
             </DetailCard>
