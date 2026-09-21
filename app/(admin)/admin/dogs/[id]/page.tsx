@@ -30,7 +30,7 @@ export default async function DogPage({ params, searchParams }: Props) {
     .select(
       `id, name, sex, breed_code, birthday, weight_kg, microchip, color, color_code,
        coat_type_code, status, is_external, genes, breeder_note, is_self_bred,
-       acquired_on, died_on, note, sire_id, dam_id, is_published,
+       acquired_on, died_on, note, sire_id, dam_id, is_published, litter_id,
        breeds ( code, name, hex ),
        coat_colors ( code, name, hex, hex2 ),
        coat_types ( code, name ),
@@ -43,6 +43,17 @@ export default async function DogPage({ params, searchParams }: Props) {
 
   if (!dogRaw) notFound();
   const dog = dogRaw as unknown as DogDetail;
+
+  // 仔犬のカルテは仔犬一覧から開くので、「‹」も仔犬一覧へ戻す。
+  // 以前は一律に犬一覧（親犬）へ戻っていた。
+  const PUP_STATUSES = ['在舎', '商談中', '売約', '引渡済'];
+  const litterId = (dogRaw as { litter_id: string | null }).litter_id;
+  const isPuppy = litterId !== null && (PUP_STATUSES.includes(dog.status) || dog.status === '死亡');
+  const backHref = !isPuppy
+    ? '/admin/dogs'
+    : dog.status === '引渡済'
+      ? `/admin/puppies?s=${encodeURIComponent('引渡済')}`
+      : '/admin/puppies';
 
   const [{ data: littersRaw }, { data: vaccRaw }, { data: dueRaw }, { data: photoRaw }] = await Promise.all([
     supabase
@@ -141,8 +152,8 @@ export default async function DogPage({ params, searchParams }: Props) {
     <>
       <header className="sticky top-0 z-20 flex items-center gap-2.5 border-b border-adm-rule bg-adm-surface px-3 pb-2.5 pt-3">
         <Link
-          href="/admin/dogs"
-          aria-label="犬一覧へ戻る"
+          href={backHref}
+          aria-label={isPuppy ? '仔犬一覧へ戻る' : '犬一覧へ戻る'}
           className="tap flex w-[38px] items-center justify-center rounded-lg border border-adm-rule text-[15px] text-adm-muted"
         >
           ‹

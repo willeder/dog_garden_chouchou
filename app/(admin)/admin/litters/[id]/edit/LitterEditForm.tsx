@@ -150,7 +150,10 @@ export function LitterEditForm({
         note={damName}
         help={
           <>
-            母犬は変えられません。母を間違えて登録した場合は、この記録を取り消して
+            母犬は変えられません。母を間違えて登録した場合は、
+            <a href="#remove-litter" className="text-adm-action underline underline-offset-2">
+              この記録を取り消して
+            </a>
             正しい母犬で入れ直してください。
           </>
         }

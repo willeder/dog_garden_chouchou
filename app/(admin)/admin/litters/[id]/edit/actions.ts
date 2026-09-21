@@ -175,9 +175,8 @@ export async function saveLitterEdit(
 /**
  * 出産記録を取り消す。
  *
- * 仔犬を1頭でも登録したあとは取り消させない。
- * 取り消すと仔犬が母不明・腹不明で宙に浮き、帳簿の辻褄が合わなくなる。
- * その場合は先に仔犬側を1頭ずつ取り消してもらう。
+ * 登録済みの仔犬も一緒に取り消す（仔犬だけ残ると母不明・腹不明で宙に浮くため）。
+ * ただし死亡・引渡しの記録がある仔犬が1頭でもいれば、全体を取り消させない。
  *
  * 【法令】5年保存があるため物理削除はしない。deleted_at を立てるだけ。
  */
@@ -194,17 +193,38 @@ export async function removeLitter(litterId: string): Promise<LitterRemoveResult
     .maybeSingle();
   if (!litter) return { ok: false, message: '出産記録が見つかりませんでした。' };
 
-  const { count } = await supabase
+  // 仔犬も一緒に取り消す。ただし死亡・引渡しの記録がある子が1頭でもいれば全体を止める。
+  // 【法令】死亡と引渡しは帳簿に5年残す必要があるため、ここでは消さない。
+  const { data: pupsRaw } = await supabase
     .from('dogs')
-    .select('id', { count: 'exact', head: true })
+    .select('id, name, status')
     .eq('litter_id', litterId)
     .is('deleted_at', null);
+  const pups = (pupsRaw ?? []) as { id: string; name: string; status: string }[];
 
-  if ((count ?? 0) > 0) {
-    return {
-      ok: false,
-      message: `この出産には仔犬が${count}頭ぶら下がっています。先に仔犬の登録を1頭ずつ取り消してください。`,
-    };
+  if (pups.length > 0) {
+    const { data: salesRaw } = await supabase
+      .from('sales')
+      .select('dog_id')
+      .in('dog_id', pups.map((p) => p.id))
+      .is('deleted_at', null);
+    const sold = new Set(((salesRaw ?? []) as { dog_id: string }[]).map((r) => r.dog_id));
+    const locked = pups.filter((p) => p.status === '死亡' || p.status === '引渡済' || sold.has(p.id));
+    if (locked.length > 0) {
+      return {
+        ok: false,
+        message: `死亡または引き渡しの記録がある仔犬（${locked.map((p) => p.name).join('、')}）がいるため取り消せません。`,
+      };
+    }
+
+    // 先に仔犬を消す。途中で失敗しても「仔犬未登録の出産記録」として残るだけで、
+    // 母不明の仔犬が宙に浮くことはない。
+    const { error: pupErr } = await supabase
+      .from('dogs')
+      .update({ deleted_at: new Date().toISOString(), is_published: false })
+      .in('id', pups.map((p) => p.id))
+      .is('deleted_at', null);
+    if (pupErr) return { ok: false, message: `仔犬を取り消せませんでした: ${pupErr.message}` };
   }
 
   const { error } = await supabase
@@ -218,6 +238,7 @@ export async function removeLitter(litterId: string): Promise<LitterRemoveResult
   revalidatePath('/admin/dogs');
   revalidatePath('/admin/puppies');
   revalidatePath(`/admin/dogs/${litter.dam_id}`);
+  revalidatePath('/puppies');
 
   return { ok: true, damId: litter.dam_id };
 }

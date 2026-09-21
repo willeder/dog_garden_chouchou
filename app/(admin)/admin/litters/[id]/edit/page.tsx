@@ -57,7 +57,7 @@ export default async function EditLitterPage({ params }: Props) {
       .order('name'),
     supabase
       .from('dogs')
-      .select('id, name, sex, birthday')
+      .select('id, name, sex, birthday, status')
       .eq('litter_id', id)
       .is('deleted_at', null)
       .order('sex')
@@ -98,10 +98,23 @@ export default async function EditLitterPage({ params }: Props) {
     note: litter.note ?? '',
   };
 
-  // 取り消せるのは仔犬が1頭もぶら下がっていない記録だけ
+  // 仔犬も一緒に取り消す。死亡・引渡しの記録がある子がいるときだけ止める（法令上5年保存）
+  const pupStatus = new Map(((pupRows ?? []) as { id: string; status: string }[]).map((p) => [p.id, p.status]));
+  const { data: salesRows } = pups.length
+    ? await supabase
+        .from('sales')
+        .select('dog_id')
+        .in('dog_id', pups.map((p) => p.id))
+        .is('deleted_at', null)
+    : { data: [] };
+  const sold = new Set(((salesRows ?? []) as { dog_id: string }[]).map((r) => r.dog_id));
+  const locked = pups.filter((p) => {
+    const st = pupStatus.get(p.id);
+    return st === '死亡' || st === '引渡済' || sold.has(p.id);
+  });
   const blockedReason =
-    pups.length > 0
-      ? `この出産には仔犬が${pups.length}頭ぶら下がっているため取り消せません。先に仔犬の登録を1頭ずつ取り消してください。`
+    locked.length > 0
+      ? `死亡または引き渡しの記録がある仔犬（${locked.map((p) => p.name).join('、')}）がいるため、この出産記録は取り消せません。これらは帳簿に5年間残す必要があります。`
       : undefined;
 
   return (
@@ -120,6 +133,12 @@ export default async function EditLitterPage({ params }: Props) {
             {dam.name}　{ymd(litter.birth_date)}　保存を押すまで変わりません
           </p>
         </div>
+        <a
+          href="#remove-litter"
+          className="tap ml-auto flex shrink-0 items-center rounded-lg border border-[#E3C9C7] px-3 text-[12.5px] font-medium text-adm-danger"
+        >
+          取り消し
+        </a>
       </header>
 
       <LitterEditForm
@@ -135,6 +154,7 @@ export default async function EditLitterPage({ params }: Props) {
             litterId={litter.id}
             label={`${dam.name} ${ymd(litter.birth_date)}`}
             blockedReason={blockedReason}
+            pupNames={pups.map((p) => p.name)}
           />
         }
       />
