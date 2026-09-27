@@ -138,14 +138,18 @@ export function validateDog(input: DogEditInput): { message: string; field?: key
   if (input.birthday && !DATE_RE.test(input.birthday)) {
     return { message: '誕生日の形式が正しくありません。', field: 'birthday' };
   }
-  if (input.acquired_on && !DATE_RE.test(input.acquired_on)) {
+  // 自家繁殖の犬は保存時に所有日＝誕生日になる。
+  // 画面に出ていない古い所有日ではなく、保存される値で確かめる
+  // （誕生日を直したときに「所有した日が誕生日より前」で止まってしまうため）
+  const acquired = selfBredAcquiredOn(input);
+  if (acquired && !DATE_RE.test(acquired)) {
     return { message: '所有した日の形式が正しくありません。', field: 'acquired_on' };
   }
   if (input.died_on && !DATE_RE.test(input.died_on)) {
     return { message: '死亡した日の形式が正しくありません。', field: 'died_on' };
   }
 
-  if (input.birthday && input.acquired_on && input.acquired_on < input.birthday) {
+  if (input.birthday && acquired && acquired < input.birthday) {
     return { message: '所有した日が誕生日より前になっています。', field: 'acquired_on' };
   }
   if (input.birthday && input.died_on && input.died_on < input.birthday) {
